@@ -1,0 +1,109 @@
+# Flutter/Dart/Pub
+
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+
+# Flutter
+
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.flutter-export-environment.sh
+
+# Generated
+
+generated_plugin_registrant.dart
+
+# IDE
+
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+
+# Android
+
+android/.gradle/
+android/app/debug
+android/app/profile
+android/app/release
+android/local.properties
+android/key.properties
+
+# iOS
+
+ios/Flutter/.last_build_id
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+
+# macOS
+
+macos/Pods/
+
+# Linux
+
+linux/flutter/ephemeral/
+
+# Windows
+
+windows/flutter/ephemeral/
+
+# Firebase
+
+firebase-debug.log
+firestore-debug.log
+firebase.json.bak
+
+# Secrets
+
+.env
+.env.*
+*.env
+
+# Certificates
+
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.key
+
+# Apple Enterprise
+
+certificates/
+signing/
+
+# Fastlane
+
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+
+# Logs
+
+*.log
+
+# Temporary
+
+tmp/
+temp/
+
+# ESP32
+
+firmware/.pio/
+firmware/.vscode/
+
+# Misc
+
+.DS_Store
+Thumbs.db
+
+.ieal/
