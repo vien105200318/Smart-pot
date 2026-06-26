@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "910709124426",
+    "project_id": "gemini-code-assitance-6c7b1",
+    "storage_bucket": "gemini-code-assitance-6c7b1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:910709124426:android:f225e72abfda8adddc25b3",
+        "android_client_info": {
+          "package_name": "com.example.smart_pot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJqwRKDNAM7IRhwTM0AZW-8-3i3R1mqRA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
