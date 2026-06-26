@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'login_bottom_sheet.dart';
+import 'register_bottom_sheet.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -62,7 +65,19 @@ class WelcomeScreen extends StatelessWidget {
                     width: double.infinity, 
                     height: 56,
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context, 
+                          isScrollControlled: true,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20.0),
+                            ),
+                          ),
+                          builder: (context) => const LoginBottomSheet(),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00C896), 
                         foregroundColor: Colors.black87, 
@@ -108,13 +123,23 @@ class WelcomeScreen extends StatelessWidget {
                         style: TextStyle(color: Colors.white70),
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (context) => const RegisterBottomSheet(),
+                          );
+                        },
                         child: const Text(
                           'Create Account',
                           style: TextStyle(
                             color: Color(0xFF00C896),
                             fontWeight: FontWeight.bold,
-                            ),
+                          ),
                         ),
                       ),
                     ],
