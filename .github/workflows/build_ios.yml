@@ -1,74 +1,45 @@
-name: Flutter iOS CI/CD
+name: Flutter iOS Build (Unsigned IPA)
 
-# Workflow sẽ tự động chạy mỗi khi bạn push code lên nhánh 'main'
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Nút bấm thủ công trên Github để chạy khi cần
+  workflow_dispatch:
 
 jobs:
   build-ios:
-    name: Build iOS Application
-    # Bắt buộc phải dùng máy chủ macOS của GitHub để build đồ Apple
+    name: Build Unsigned IPA
     runs-on: macos-latest
 
     steps:
-      # 1. Kéo code từ repository của bạn về máy chủ GitHub
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Cài đặt môi trường Flutter
       - name: ⚙️ Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Có thể chỉ định chính xác phiên bản Flutter bạn đang dùng, ví dụ:
-          # flutter-version: '3.19.0'
 
-      # 3. Cài đặt các thư viện (packages)
       - name: 📦 Install dependencies
         run: flutter pub get
 
-      # 4. Tùy chọn A: Build kiểm tra lỗi (Dành cho tài khoản miễn phí)
-      # Lệnh này sẽ build ra file .app (không cài được lên iPhone thật) nhưng giúp đảm bảo code không lỗi
-      - name: 🛠️ Build iOS (No Codesign)
-        run: flutter build ios --release --no-codesign
+      # Build ra file .app dành cho thiết bị thật (iphoneos)
+      # --no-codesign là chìa khóa để build mà không cần tài khoản Apple
+      - name: 🛠️ Build iOS App
+        run: flutter build ios --release --no-codesign --config-only
 
-      # ---------------------------------------------------------
-      # TÙY CHỌN B: BUILD FILE .IPA HOÀN CHỈNH (KHI CÓ TÀI KHOẢN APPLE 99$)
-      # Nếu có tài khoản, bạn xóa dấu # ở các dòng dưới đây và thiết lập Github Secrets
-      # ---------------------------------------------------------
-      
-      # - name: 🔐 Install Apple Certificate
-      #   env:
-      #     BUILD_CERTIFICATE_BASE64: ${{ secrets.APP_CERT_BASE64 }}
-      #     P12_PASSWORD: ${{ secrets.APP_CERT_PASSWORD }}
-      #     BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.APP_PROVISION_PROFILE_BASE64 }}
-      #     KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-      #   run: |
-      #     # Script tạo keychain tạm thời trên máy chủ và import chứng chỉ Apple
-      #     CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-      #     PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-      #     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-      #     
-      #     echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-      #     echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-      #     
-      #     security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-      #     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-      #     security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-      #     security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-      #     security list-keychain -d user -s $KEYCHAIN_PATH
-      #     
-      #     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-      #     cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+      # Bước quan trọng: Đóng gói theo cấu trúc Payload của iOS
+      # App iOS thực chất là một thư mục .app, ta cần đặt nó trong thư mục 'Payload' rồi nén lại
+      - name: 📦 Package into Unsigned IPA
+        run: |
+          mkdir -p Payload
+          # Lưu ý: Runner.app là tên mặc định của Flutter Project
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -qr smart_pot_unsigned.ipa Payload
 
-      # - name: 📦 Build IPA
-      #   run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-
-      # - name: 🚀 Upload IPA Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: smart-pot-ios-release
-      #     path: build/ios/ipa/*.ipa
+      - name: 🚀 Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-pot-ios-unsigned
+          path: smart_pot_unsigned.ipa
+          retention-days: 7
