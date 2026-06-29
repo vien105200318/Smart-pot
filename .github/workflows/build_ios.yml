@@ -23,18 +23,22 @@ jobs:
       - name: 📦 Install dependencies
         run: flutter pub get
 
-      # Build ra file .app dành cho thiết bị thật (iphoneos)
-      # --no-codesign là chìa khóa để build mà không cần tài khoản Apple
+      # Build iOS với cờ --release
       - name: 🛠️ Build iOS App
-        run: flutter build ios --release --no-codesign --config-only
+        run: flutter build ios --release --no-codesign
 
-      # Bước quan trọng: Đóng gói theo cấu trúc Payload của iOS
-      # App iOS thực chất là một thư mục .app, ta cần đặt nó trong thư mục 'Payload' rồi nén lại
+      # Kiểm tra và đóng gói
       - name: 📦 Package into Unsigned IPA
         run: |
           mkdir -p Payload
-          # Lưu ý: Runner.app là tên mặc định của Flutter Project
-          cp -r build/ios/iphoneos/Runner.app Payload/
+          # Tìm file .app trong thư mục build để copy cho chính xác
+          APP_PATH=$(find build/ios -name "*.app" | head -n 1)
+          echo "Found app at: $APP_PATH"
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: .app file not found!"
+            exit 1
+          fi
+          cp -r "$APP_PATH" Payload/
           zip -qr smart_pot_unsigned.ipa Payload
 
       - name: 🚀 Upload IPA Artifact
