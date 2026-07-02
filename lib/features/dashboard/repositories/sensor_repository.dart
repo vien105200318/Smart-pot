@@ -29,7 +29,30 @@ class SensorRepository {
         'temperature': 0.0,
         'humidity': 0.0,
         'waterLevel': 0.0,
+        'pumpStatus': false,
+        'mistStatus': false,
       };
     });
+  }
+
+  // Hàm điều khiển máy bơm nước
+  Future<void> triggerWaterPump(bool isOn) async {
+    try {
+      await _firestore.collection('pots').doc('pot_001').update({
+        'pumpStatus': isOn, 
+      });
+    } catch (e) {
+      throw Exception('Lỗi bật máy bơm: $e');
+    }
+  }
+
+  Future<void> triggerMister(bool isOn) async {
+    try {
+      await _firestore.collection('pots').doc('pot_001').update({
+        'mistStatus': isOn, 
+      });
+    } catch (e) {
+      throw Exception('Lỗi bật phun sương: $e');
+    }
   }
 }
