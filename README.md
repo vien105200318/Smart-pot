@@ -1,221 +1,178 @@
 # 🌱 Smart Pot
 
-A smart IoT plant monitoring and irrigation system built with **Flutter**, **Firebase**, and **ESP32**.
+A smart IoT plant monitoring and irrigation system built with **Flutter**, **Firebase**, **ESP32**, and automated by **Vercel**.
 
-Monitor your plants in real-time, automate watering, control misting remotely, and receive notifications directly from your mobile device.
-
----
-
-## Features
-
-### Plant Monitoring
-
-* Real-time temperature monitoring
-* Real-time air humidity monitoring
-* Real-time soil moisture monitoring
-* Device online/offline status
-
-### Remote Control
-
-* Manual watering
-* Manual misting
-* Auto mode toggle
-
-### Automation
-
-* Automatic watering based on soil moisture threshold
-* Automatic misting based on environmental conditions
-* Local automation logic running on ESP32
-
-### Mobile App
-
-* Flutter (iOS first)
-* Firebase Authentication
-* Realtime Firestore synchronization
-* Historical sensor charts
-* Push notifications
+Monitor your plants in real time, automate watering, control misting remotely, and receive intelligent notifications directly on your mobile device.
 
 ---
 
-## Hardware
+# 🏗️ Architecture Overview
 
-### Controller
-
-* ESP32
-
-### Sensors
-
-* DHT12 (Temperature & Humidity)
-* Soil Moisture Sensor
-
-### Actuators
-
-* Water Valve
-* Mist Sprayer
-* MOSFET Drivers
-
-### Future Expansion
-
-* ESP32-CAM
-* Water Tank Level Sensor
-* Light Sensor
-* Fertilizer Module
-
----
-
-## Architecture
+To maintain a cost-effective and scalable architecture, this project uses **Firebase** for real-time data storage and **Vercel Serverless Functions** for background monitoring and automated alerts, eliminating the need for a paid Firebase Blaze plan.
 
 ```text
-Flutter App
-      │
-      ▼
- Firebase
-(Auth + Firestore + FCM)
-      │
-      ▼
-     ESP32
-      │
- ┌─────────────┐
- │   DHT12     │
- │ Soil Sensor │
- │ Water Valve │
- │ Mist Spray  │
- └─────────────┘
+Flutter App ◄──► Firebase (Auth + Firestore) ◄──► ESP32
+                         │
+                         ▼
+             Vercel Cron Job (Serverless)
+                         │
+                         ▼
+             Firebase Cloud Messaging (FCM)
 ```
 
 ---
 
-## Tech Stack
+# 🚀 Why Vercel for Notifications?
 
-### Mobile
+Instead of relying on Firebase Cloud Functions, this project utilizes **Vercel Cron Jobs**.
 
-* Flutter
-* Riverpod
-* GoRouter
-* Freezed
+### 💰 Cost Efficiency
 
-### Backend
+- Completely free
+- No need to upgrade to Firebase Blaze Plan
 
-* Firebase Authentication
-* Cloud Firestore
-* Firebase Cloud Messaging
+### 🔧 Flexibility
 
-### Firmware
+- Decouples server-side monitoring logic from the database
+- Easier maintenance and testing
 
-* ESP32
-* Arduino Framework
+### 🤖 Automation
 
-### CI/CD
-
-* GitHub Actions
-* Firebase App Distribution
-* Apple Enterprise Distribution
+- Vercel periodically polls Firestore
+- Detects device offline events
+- Sends push notifications through Firebase Cloud Messaging (FCM)
 
 ---
 
-## Project Structure
+# ✨ Features
+
+## 🌿 Plant Monitoring
+
+- Real-time temperature
+- Real-time air humidity
+- Real-time soil moisture
+- Device online/offline status tracking
+
+## 💧 Remote Control & Automation
+
+- Manual watering control
+- Manual misting control
+- Auto-mode switching
+- Local automation logic running on ESP32
+
+## 📱 Mobile App (Flutter)
+
+- Riverpod (State Management)
+- GoRouter (Navigation)
+- Push notifications via Firebase Cloud Messaging (FCM)
+- Notifications triggered by Vercel Cron Jobs
+
+---
+
+# 🛠 Tech Stack
+
+## Mobile
+
+- Flutter
+- Riverpod
+- GoRouter
+- Freezed
+
+## Backend & Automation
+
+- Firebase Firestore (Realtime Database)
+- Firebase Authentication
+- Vercel Functions
+- Firebase Cloud Messaging (FCM)
+
+## Firmware
+
+- ESP32 (Arduino Framework)
+
+## DevOps
+
+- GitHub Actions (CI/CD)
+- Automated IPA Building
+
+---
+
+# 📂 Project Structure
 
 ```text
 smart-pot/
-
-├── app/
-│   └── flutter/
-│
-├── firmware/
-│   └── esp32/
-│
-├── docs/
-│
-└── .github/
-    └── workflows/
+├── app/            # Flutter source code
+├── api/            # Vercel Serverless Functions (Node.js)
+├── firmware/       # ESP32 firmware
+├── .github/        # GitHub Actions workflows
+└── vercel.json     # Vercel Cron Job configuration
 ```
 
 ---
 
-## Firestore Structure
-
-```text
-devices
- └── pot_001
-```
-
-Example:
+# 🗄 Firestore Data Model
 
 ```json
 {
   "name": "Balcony Pot",
-  "online": true,
+  "isOnline": true,
   "temperature": 31.5,
-  "humidity": 68,
   "soilMoisture": 42,
   "watering": false,
-  "misting": false,
   "autoMode": true
 }
 ```
 
 ---
 
-## Roadmap
+# 🚀 Development Setup
 
-### V1
-
-* [x] Flutter App
-* [x] Firebase Integration
-* [x] ESP32 Integration
-* [x] Real-time Monitoring
-* [x] Manual Watering
-* [x] Manual Misting
-* [x] Auto Watering
-* [x] Historical Charts
-* [x] Push Notifications
-
-### V1.5
-
-* [ ] Camera Snapshot
-* [ ] Multiple Plant Pots
-* [ ] OTA Firmware Updates
-
-### V2
-
-* [ ] Plant Health Monitoring
-* [ ] Advanced Scheduling
-* [ ] Shared Device Access
-* [ ] Web Dashboard
-
----
-
-## Development Setup
-
-### Flutter
+## Flutter
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-### Firebase
+## Vercel Backend
 
-```bash
-flutterfire configure
+1. Generate a **Service Account Key** from Firebase Console.
+2. Add it as an environment variable:
+
+```text
+FIREBASE_SERVICE_ACCOUNT
 ```
 
-### ESP32
+3. Deploy:
 
 ```bash
-pio run
+vercel --prod
+```
+
+## ESP32
+
+```bash
 pio run --target upload
 ```
 
 ---
 
-## Goals
+# 🛣 Roadmap
 
-Build a reliable and scalable smart plant ecosystem starting with a single plant pot and expanding to multi-device smart garden management.
+## ✅ V1 (Current)
+
+- [x] Real-time monitoring
+- [x] Manual controls
+- [x] Auto-watering logic
+- [x] GitHub Actions CI/CD
+- [x] Vercel-based notification system
+
+## 🚧 V1.5
+
+- [ ] Camera snapshot integration
+- [ ] Multi-pot management
 
 ---
 
-## License
+# 📄 License
 
-MIT License
-
+This project is licensed under the **MIT License**.
