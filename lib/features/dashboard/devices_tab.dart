@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'repositories/sensor_repository.dart';
 
-class DevicesTab extends StatelessWidget {
+class DevicesTab extends ConsumerWidget {
   const DevicesTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sensorAsyncValue = ref.watch(sensorStreamProvider);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -21,43 +25,60 @@ class DevicesTab extends StatelessWidget {
               style: TextStyle(color: Colors.white54, fontSize: 16),
             ),
             const SizedBox(height: 24),
-            
-            // Danh sách các thiết bị
+      
             Expanded(
-              child: ListView(
-                children: [
-                  _buildDeviceCard(
-                    icon: Icons.memory,
-                    title: 'ESP32 Development Board',
-                    subtitle: 'Wi-Fi Module • IP: 192.168.1.45',
-                    status: 'Online',
-                    statusColor: const Color(0xFF00C896),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDeviceCard(
-                    icon: Icons.developer_board,
-                    title: 'Custom Two-Layer PCB',
-                    subtitle: 'Main Controller Unit • FW: v1.2',
-                    status: 'Online',
-                    statusColor: const Color(0xFF00C896),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDeviceCard(
-                    icon: Icons.water_drop,
-                    title: 'Water Pump Relay',
-                    subtitle: 'GPIO 4 • Auto-mode',
-                    status: 'Standby',
-                    statusColor: Colors.orangeAccent,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDeviceCard(
-                    icon: Icons.sensors_off,
-                    title: 'External Temp Sensor',
-                    subtitle: 'I2C Bus • Battery: 5%',
-                    status: 'Offline',
-                    statusColor: Colors.redAccent,
-                  ),
-                ],
+              child: sensorAsyncValue.when(
+                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
+                error: (error, stack) => Center(child: Text('Lỗi đồng bộ: $error', style: const TextStyle(color: Colors.redAccent))),
+                data: (data) {
+                  final bool isOnline = data['isOnline'] ?? false;
+                  final bool isWatering = data['pumpStatus'] ?? false;
+                  final bool isMisting = data['mistStatus'] ?? false;
+
+                  return ListView(
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildDeviceCard(
+                        icon: Icons.memory,
+                        title: 'ESP32 Main Board',
+                        subtitle: 'Wi-Fi Module • IP: 192.168.1.45',
+                        status: isOnline ? 'Online' : 'Offline',
+                        statusColor: isOnline ? const Color(0xFF00C896) : Colors.redAccent,
+                        isActive: isOnline,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      _buildDeviceCard(
+                        icon: Icons.water_drop,
+                        title: 'Water Pump Relay',
+                        subtitle: 'GPIO 4 • 5V DC Pump',
+                        status: isWatering ? 'Pumping...' : (isOnline ? 'Standby' : 'Offline'),
+                        statusColor: isWatering ? Colors.blueAccent : (isOnline ? Colors.orangeAccent : Colors.redAccent),
+                        isActive: isWatering,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildDeviceCard(
+                        icon: Icons.cloud,
+                        title: 'Ultrasonic Mist Maker',
+                        subtitle: 'GPIO 5 • 24V Humidifier',
+                        status: isMisting ? 'Misting...' : (isOnline ? 'Standby' : 'Offline'),
+                        statusColor: isMisting ? Colors.purpleAccent : (isOnline ? Colors.orangeAccent : Colors.redAccent),
+                        isActive: isMisting,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _buildDeviceCard(
+                        icon: Icons.sensors,
+                        title: 'Environment Sensors',
+                        subtitle: 'DHT11 & Capacitive Soil',
+                        status: isOnline ? 'Reading' : 'Offline',
+                        statusColor: isOnline ? const Color(0xFF00C896) : Colors.redAccent,
+                        isActive: isOnline, 
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -72,17 +93,28 @@ class DevicesTab extends StatelessWidget {
     required String subtitle,
     required String status,
     required Color statusColor,
+    required bool isActive,
   }) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F2C),
+        color: const Color(0xFF161B22),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(
+          color: isActive ? statusColor.withOpacity(0.5) : Colors.white.withOpacity(0.05),
+          width: isActive ? 1.5 : 1.0,
+        ),
+        boxShadow: isActive ? [
+          BoxShadow(
+            color: statusColor.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ] : [],
       ),
       child: Row(
         children: [
-
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -92,8 +124,6 @@ class DevicesTab extends StatelessWidget {
             child: Icon(icon, color: statusColor, size: 28),
           ),
           const SizedBox(width: 16),
-          
-          // information device 
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,8 +140,6 @@ class DevicesTab extends StatelessWidget {
               ],
             ),
           ),
-          
-          //  device status
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
