@@ -1,56 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:workmanager/workmanager.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'firebase_options.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'firebase_options.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
 
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    // Khởi tạo Firebase nếu chưa có
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    }
-    
-    // Kiểm tra trạng thái
-    final doc = await FirebaseFirestore.instance.collection('pots').doc('pot_001').get();
-    final isOnline = doc.data()?['isOnline'] ?? true;
 
-    if (isOnline == false) {
-      // Cần khởi tạo lại NotificationService trong background task
-      await NotificationService.initialize();
-      await NotificationService.showLocalNotification(
-        id: 999,
-        title: "Cảnh báo!",
-        body: "Thiết bị ESP32 đã Offline!",
-      );
-    }
-    return Future.value(true);
-  });
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
   await NotificationService.initialize();
   
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   
-  // Test thử sau 5 giây
-  await Workmanager().registerOneOffTask(
-    "1", 
-    "checkDeviceStatusTask", 
-    initialDelay: const Duration(seconds: 5),
-  );
+  await setupPushNotifications();
 
   runApp(const ProviderScope(child: SmartPotApp()));
 }
 
+Future<void> setupPushNotifications() async {
+  final messaging = FirebaseMessaging.instance;
+
+  final settings = await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    await messaging.subscribeToTopic('all_users');
+  }
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    NotificationService.showLocalNotification(
+      id: DateTime.now().millisecond,
+      title: message.notification?.title ?? "Cảnh báo!",
+      body: message.notification?.body ?? "Thiết bị có thay đổi trạng thái.",
+    );
+  });
+}
+
 class SmartPotApp extends ConsumerWidget {
   const SmartPotApp({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(

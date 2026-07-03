@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/*.js": {
+      "runtime": "vercel-node@latest"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/check-pot",
+      "schedule": "*/5 * * * *" 
+    }
+  ]
+}

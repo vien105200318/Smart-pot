@@ -1,0 +1,10 @@
+build/
+ios/
+android/
+macos/
+windows/
+linux/
+web/
+.dart_tool/
+.pub/
+.symlinks/
