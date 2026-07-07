@@ -79,7 +79,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text('Lỗi kết nối: $error', style: const TextStyle(color: Colors.redAccent)),
               ),
               data: (sensorData) {
-                // Đọc thông số cảm biến
                 final moisture = (sensorData['moisture'] as num?)?.toDouble() ?? 0.0;
                 final temperature = (sensorData['temperature'] as num?)?.toDouble() ?? 0.0;
                 final humidity = (sensorData['humidity'] as num?)?.toDouble() ?? 0.0;
