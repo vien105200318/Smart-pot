@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
 
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
@@ -149,17 +150,22 @@ class SettingsTab extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2)),
             const SizedBox(height: 16),
-            _buildSettingsTile(
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => const WifiSetupBottomSheet(), 
+                );
+              },
+              child: _buildSettingsTile(
                 icon: Icons.wifi,
                 title: 'Wi-Fi Configuration',
                 subtitle: 'Manage ESP32 network',
-                color: const Color(0xFF00C896)),
-            _buildSettingsTile(
-                icon: Icons.system_update,
-                title: 'Firmware Update',
-                subtitle: 'v1.2 (Up to date)',
-                color: Colors.tealAccent),
-            const SizedBox(height: 48),
+                color: const Color(0xFF00C896),
+              ),
+            ),
             SizedBox(
               width: double.infinity,
               height: 56,
