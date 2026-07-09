@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsTab extends StatelessWidget {
   const SettingsTab({super.key});
@@ -166,6 +167,10 @@ class SettingsTab extends StatelessWidget {
                 onPressed: () async {
                   try {
                     await FirebaseAuth.instance.signOut();
+
+                    if (context.mounted) {
+                      context.go('/welcome');
+                    }
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
