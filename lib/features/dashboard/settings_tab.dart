@@ -207,6 +207,89 @@ class SettingsTab extends StatelessWidget {
                 );
               },
             ),
+            const SizedBox(height: 32),
+            const Text('DANGER ZONE',
+                style: TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2)),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: const Color(0xFF161B22),
+                      title: const Text('Xóa thiết bị?', style: TextStyle(color: Colors.white)),
+                      content: const Text(
+                        'Hành động này sẽ ngắt kết nối chậu cây khỏi tài khoản của bạn. Thiết bị sẽ tự động khởi động lại và xóa cài đặt Wi-Fi.',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Xóa ngay', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirm == true) {
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('pots')
+                          .doc('pot_001')
+                          .update({
+                        'ownerId': '',
+                        'pumpStatus': false,
+                        'mistStatus': false,
+                      });
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Đã xóa thiết bị thành công!'),
+                            backgroundColor: Color(0xFF00C896),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Lỗi khi xóa thiết bị!'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                label: const Text('Unpair Smart Pot',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.redAccent)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.redAccent,
+                  elevation: 0,
+                  side: const BorderSide(color: Colors.redAccent),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 56,
