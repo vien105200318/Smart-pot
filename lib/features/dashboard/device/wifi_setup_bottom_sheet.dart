@@ -57,7 +57,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
     }
   }
 
-  // GỌI API /save ĐỂ BƠM MẬT KHẨU XUỐNG ESP32
   Future<void> _saveWiFi() async {
     if (_selectedSSID == null) return;
 
@@ -109,7 +108,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nút quay lại hoặc Thanh trượt
           Center(
             child: Container(
               width: 40,
@@ -122,7 +120,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
           ),
           const SizedBox(height: 24),
 
-          // TIÊU ĐỀ THAY ĐỔI THEO TRẠNG THÁI
           Row(
             children: [
               if (_selectedSSID != null)
@@ -150,7 +147,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
           ),
           const SizedBox(height: 16),
 
-          // HIỂN THỊ NỘI DUNG CHÍNH
           Expanded(
             child: _selectedSSID == null
                 ? _buildNetworkList()
@@ -161,7 +157,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
     );
   }
 
-  // GIAO DIỆN 1: DANH SÁCH WIFI
   Widget _buildNetworkList() {
     if (_isLoading) {
       return const Center(
@@ -203,7 +198,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
     );
   }
 
-  // GIAO DIỆN 2: NHẬP PASSWORD
   Widget _buildPasswordForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
