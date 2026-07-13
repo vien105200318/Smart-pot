@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
-
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -16,11 +16,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  
   await NotificationService.initialize();
   
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  
   await setupPushNotifications();
 
   runApp(const ProviderScope(child: SmartPotApp()));
@@ -53,10 +51,27 @@ class SmartPotApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDarkMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false, 
       title: 'Smart Pot',
       routerConfig: ref.watch(goRouterProvider),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.grey[100],
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF00C896),
+        ),
+      ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF161B22),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00C896),
+        ),
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WifiSetupBottomSheet extends StatefulWidget {
   const WifiSetupBottomSheet({super.key});
@@ -28,11 +29,9 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
     super.dispose();
   }
 
-  // GỌI API /scan CỦA ESP32
   Future<void> _scanNetworks() async {
     setState(() => _isLoading = true);
     try {
-      // Đặt timeout 10 giây phòng trường hợp điện thoại chưa kết nối WiFi ESP32
       final response = await http
           .get(Uri.parse('http://192.168.4.1/scan'))
           .timeout(const Duration(seconds: 10));
@@ -60,6 +59,14 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
   Future<void> _saveWiFi() async {
     if (_selectedSSID == null) return;
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lỗi: Bạn chưa đăng nhập tài khoản!')),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final response = await http.post(
@@ -68,15 +75,16 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
         body: json.encode({
           'ssid': _selectedSSID,
           'password': _passController.text.trim(),
+          'userId': user.uid,
         }),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         if (mounted) {
-          Navigator.pop(context); // Đóng Bottom Sheet
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Đã nạp WiFi thành công! Mạch đang khởi động lại...'),
+              content: Text('Đã nạp WiFi thành công! Mạch đang kết nối mạng và kích hoạt...'),
               backgroundColor: Color(0xFF00C896),
             ),
           );
@@ -86,7 +94,7 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Lỗi kết nối khi gửi dữ liệu!'),
+            content: Text('Lỗi kết nối khi gửi dữ liệu sang thiết bị!'),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -99,10 +107,10 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.7, // Chiếm 70% màn hình
+      height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(24.0),
       decoration: const BoxDecoration(
-        color: Color(0xFF161B22), // Màu nền Dark Mode
+        color: Color(0xFF161B22),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -119,7 +127,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
             ),
           ),
           const SizedBox(height: 24),
-
           Row(
             children: [
               if (_selectedSSID != null)
@@ -146,7 +153,6 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
             ],
           ),
           const SizedBox(height: 16),
-
           Expanded(
             child: _selectedSSID == null
                 ? _buildNetworkList()

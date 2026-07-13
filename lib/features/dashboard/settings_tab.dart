@@ -9,6 +9,12 @@ class SettingsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final currentUid = user?.uid ?? '';
+    final displayName = user?.displayName ?? 'Người dùng Smart Pot';
+    final email = user?.email ?? 'Chưa cập nhật email';
+    final photoURL = user?.photoURL;
+
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -27,28 +33,36 @@ class SettingsTab extends StatelessWidget {
             const SizedBox(height: 32),
             Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 36,
-                  backgroundColor: Color(0xFF00C896),
-                  child: Icon(Icons.person, size: 40, color: Colors.black87),
+                  backgroundColor: const Color(0xFF00C896),
+                  backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
+                  child: photoURL == null 
+                      ? const Icon(Icons.person, size: 40, color: Colors.black87) 
+                      : null,
                 ),
                 const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Nguyễn Văn Viên',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text('vien.nguyen@smartpot.com',
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 14)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(displayName,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 4),
+                      Text(email,
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
-                const Spacer(),
                 IconButton(
                   onPressed: () {},
                   icon: const Icon(Icons.edit_outlined, color: Colors.white54),
@@ -63,10 +77,10 @@ class SettingsTab extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2)),
             const SizedBox(height: 16),
-            StreamBuilder<DocumentSnapshot>(
+            StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('pots')
-                  .doc('pot_001')
+                  .where('ownerId', isEqualTo: currentUid)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -74,14 +88,46 @@ class SettingsTab extends StatelessWidget {
                       style: TextStyle(color: Colors.red));
                 }
 
-                bool isPumpOn = false;
-                bool isMistOn = false;
-
-                if (snapshot.hasData && snapshot.data!.exists) {
-                  final data = snapshot.data!.data() as Map<String, dynamic>;
-                  isPumpOn = data['pumpStatus'] ?? false;
-                  isMistOn = data['mistStatus'] ?? false;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF00C896)),
+                  );
                 }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161B22),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.sensors_off, color: Colors.white38, size: 40),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Chưa có thiết bị nào được kết nối',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Vui lòng cuộn xuống mục "Wi-Fi Configuration" bên dưới để cấu hình và nhận diện chậu cây.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final deviceDoc = snapshot.data!.docs.first;
+                final data = deviceDoc.data() as Map<String, dynamic>;
+                final String docId = deviceDoc.id;
+
+                bool isPumpOn = data['pumpStatus'] ?? false;
+                bool isMistOn = data['mistStatus'] ?? false;
 
                 return Column(
                   children: [
@@ -96,7 +142,7 @@ class SettingsTab extends StatelessWidget {
                       onChanged: (val) {
                         FirebaseFirestore.instance
                             .collection('pots')
-                            .doc('pot_001')
+                            .doc(docId)
                             .update({'pumpStatus': val});
                       },
                     ),
@@ -111,7 +157,7 @@ class SettingsTab extends StatelessWidget {
                       onChanged: (val) {
                         FirebaseFirestore.instance
                             .collection('pots')
-                            .doc('pot_001')
+                            .doc(docId)
                             .update({'mistStatus': val});
                       },
                     ),
@@ -131,17 +177,14 @@ class SettingsTab extends StatelessWidget {
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
                 subtitle: 'On for all devices',
-                color: Colors.blueAccent),
+                color: Colors.blueAccent,
+                onTap: () {}),
             _buildSettingsTile(
                 icon: Icons.language,
                 title: 'Language',
                 subtitle: 'English',
-                color: Colors.orangeAccent),
-            _buildSettingsTile(
-                icon: Icons.dark_mode_outlined,
-                title: 'Appearance',
-                subtitle: 'Dark Mode',
-                color: Colors.purpleAccent),
+                color: Colors.orangeAccent,
+                onTap: () {}),
             const SizedBox(height: 32),
             const Text('DEVICE',
                 style: TextStyle(
@@ -150,7 +193,11 @@ class SettingsTab extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                     letterSpacing: 1.2)),
             const SizedBox(height: 16),
-            GestureDetector(
+            _buildSettingsTile(
+              icon: Icons.wifi,
+              title: 'Wi-Fi Configuration',
+              subtitle: 'Manage ESP32 network',
+              color: const Color(0xFF00C896),
               onTap: () {
                 showModalBottomSheet(
                   context: context,
@@ -159,12 +206,6 @@ class SettingsTab extends StatelessWidget {
                   builder: (context) => const WifiSetupBottomSheet(), 
                 );
               },
-              child: _buildSettingsTile(
-                icon: Icons.wifi,
-                title: 'Wi-Fi Configuration',
-                subtitle: 'Manage ESP32 network',
-                color: const Color(0xFF00C896),
-              ),
             ),
             SizedBox(
               width: double.infinity,
@@ -173,7 +214,6 @@ class SettingsTab extends StatelessWidget {
                 onPressed: () async {
                   try {
                     await FirebaseAuth.instance.signOut();
-
                     if (context.mounted) {
                       context.go('/welcome');
                     }
@@ -208,61 +248,68 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsTile(
-      {required IconData icon,
-      required String title,
-      required String subtitle,
-      required Color color}) {
+  Widget _buildSettingsTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF161B22),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          color: Colors.white54, fontSize: 13)),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            color: Colors.white54, fontSize: 13)),
+                  ],
+                ),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.white38),
-          ],
+              const Icon(Icons.chevron_right, color: Colors.white38),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSwitchTile(
-      {required IconData icon,
-      required String title,
-      required String subtitle,
-      required Color color,
-      required bool value,
-      required Function(bool) onChanged}) {
+  Widget _buildSwitchTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Container(
