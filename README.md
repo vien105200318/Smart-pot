@@ -1,4 +1,4 @@
-# <img src="./app/assets/images/logo.png" width="40" height="40" align="center"> Smart Pot
+# <img src="https://github.com/vien105200318/Smart-pot/blob/main/assets/images/logo.png" width="40" height="40" align="center"> Smart Pot
 
 A smart IoT plant monitoring and irrigation system built with **Flutter**, **Firebase**, **ESP32**, and automated by **Vercel**.
 
