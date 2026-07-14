@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final sensorRepositoryProvider = Provider<SensorRepository>((ref) {
@@ -16,31 +17,44 @@ class SensorRepository {
   SensorRepository(this._firestore);
 
   Stream<Map<String, dynamic>> getSensorDataStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Stream.value(_defaultEmptyData()); 
+    }
+
     return _firestore
         .collection('pots')
-        .doc('pot_001') 
-        .snapshots() 
+        .where('ownerId', isEqualTo: user.uid) 
+        .limit(1) 
+        .snapshots()
         .map((snapshot) {
-      if (snapshot.exists && snapshot.data() != null) {
-        return snapshot.data()!;
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data();
+        data['docId'] = snapshot.docs.first.id; 
+        return data;
       }
-      return {
-        'moisture': 0.0,
-        'temperature': 0.0,
-        'humidity': 0.0,
-        'waterLevel': 0.0,
-        'pumpStatus': false,
-        'mistStatus': false,
-      };
+      return _defaultEmptyData();
     });
   }
 
-  // Hàm điều khiển máy bơm nước
   Future<void> triggerWaterPump(bool isOn) async {
     try {
-      await _firestore.collection('pots').doc('pot_001').update({
-        'pumpStatus': isOn, 
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Chưa đăng nhập');
+
+      // Tìm chậu cây của user này
+      final snapshot = await _firestore.collection('pots')
+          .where('ownerId', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        await snapshot.docs.first.reference.update({
+          'pumpStatus': isOn,
+        });
+      } else {
+        throw Exception('Không tìm thấy thiết bị nào của bạn!');
+      }
     } catch (e) {
       throw Exception('Lỗi bật máy bơm: $e');
     }
@@ -48,11 +62,35 @@ class SensorRepository {
 
   Future<void> triggerMister(bool isOn) async {
     try {
-      await _firestore.collection('pots').doc('pot_001').update({
-        'mistStatus': isOn, 
-      });
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Chưa đăng nhập');
+
+      final snapshot = await _firestore.collection('pots')
+          .where('ownerId', isEqualTo: user.uid)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        await snapshot.docs.first.reference.update({
+          'mistStatus': isOn,
+        });
+      } else {
+        throw Exception('Không tìm thấy thiết bị nào của bạn!');
+      }
     } catch (e) {
       throw Exception('Lỗi bật phun sương: $e');
     }
+  }
+
+  Map<String, dynamic> _defaultEmptyData() {
+    return {
+      'moisture': 0.0,
+      'temperature': 0.0,
+      'humidity': 0.0,
+      'waterLevel': 0.0,
+      'pumpStatus': false,
+      'mistStatus': false,
+      'isOnline': false,
+    };
   }
 }

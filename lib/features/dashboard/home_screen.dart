@@ -76,7 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator(color: Color(0xFF00C896))),
               ),
               error: (error, stack) => Center(
-                child: Text('Lỗi kết nối: $error', style: const TextStyle(color: Colors.redAccent)),
+                child: Text('Lỗi Firebase: $error', style: const TextStyle(color: Colors.redAccent)),
               ),
               data: (sensorData) {
                 final moisture = (sensorData['moisture'] as num?)?.toDouble() ?? 0.0;
@@ -117,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   await ref.read(sensorRepositoryProvider).triggerWaterPump(!isWatering);
                                 } catch (e) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi đồng bộ!'), backgroundColor: Colors.redAccent));
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent));
                                   }
                                 }
                               },
@@ -147,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   await ref.read(sensorRepositoryProvider).triggerMister(!isMisting);
                                 } catch (e) {
                                   if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi đồng bộ!'), backgroundColor: Colors.redAccent));
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent));
                                   }
                                 }
                               },

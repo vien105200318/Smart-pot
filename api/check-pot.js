@@ -8,6 +8,7 @@ if (!admin.apps.length) {
       credential: admin.credential.cert(serviceAccount),
       projectId: "gemini-code-assitance-6c7b1"
     });
+    console.log("✅ Firebase Admin khởi tạo thành công!");
   } catch (err) {
     console.error("❌ Lỗi khởi tạo Firebase:", err.message);
     process.exit(1); 
@@ -15,25 +16,24 @@ if (!admin.apps.length) {
 }
 
 module.exports = async (req, res) => {
-  // Thêm một lớp bảo mật đơn giản: chỉ cho phép gọi bằng khóa bí mật (nếu muốn)
-  // Ví dụ: const secret = req.headers['x-cron-secret'];
-  
   try {
     const db = admin.firestore();
     const potsSnapshot = await db.collection('pots').get();
     
     if (potsSnapshot.empty) {
-      return res.status(200).send('Không có thiết bị.');
+      return res.status(200).json({ status: 'ok', message: 'Không có thiết bị nào trong hệ thống.' });
     }
 
-    const results = []; // Để theo dõi kết quả
+    const results = []; 
 
     for (const doc of potsSnapshot.docs) {
       const data = doc.data();
       const potRef = doc.ref;
 
+      // Chỉ xử lý nếu document có trường isOnline
       if (data.hasOwnProperty('isOnline')) {
-        // Xử lý Offline
+        
+        // Kịch bản 1: Thiết bị OFFLINE
         if (data.isOnline === false && data.alertSent !== true) {
           await admin.messaging().send({
             notification: { 
@@ -45,7 +45,8 @@ module.exports = async (req, res) => {
           await potRef.update({ alertSent: true });
           results.push(`${doc.id}: Đã gửi cảnh báo Offline`);
         } 
-        // Xử lý Online
+        
+        // Kịch bản 2: Thiết bị ONLINE trở lại
         else if (data.isOnline === true && data.alertSent === true) {
           await admin.messaging().send({
             notification: { 
@@ -56,14 +57,28 @@ module.exports = async (req, res) => {
           });
           await potRef.update({ alertSent: false });
           results.push(`${doc.id}: Đã gửi thông báo Online`);
+        } 
+        
+        // Thiết bị bình thường
+        else {
+          results.push(`${doc.id}: Bình thường (Online: ${data.isOnline})`);
         }
       }
     }
     
-    return res.status(200).json({ status: 'success', details: results });
+    // Trả về JSON để nhìn cho chuyên nghiệp và dễ debug
+    return res.status(200).json({ 
+      status: 'success', 
+      checked_count: potsSnapshot.size,
+      details: results 
+    });
     
   } catch (error) {
-    console.error("❌ Lỗi Cron Job:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("❌ Lỗi hệ thống:", error);
+    return res.status(500).json({ 
+      status: 'error', 
+      message: error.message,
+      stack: error.stack
+    });
   }
 };
