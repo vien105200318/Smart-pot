@@ -1,55 +1,69 @@
 const admin = require('firebase-admin');
 
+// Khởi tạo Admin SDK
 if (!admin.apps.length) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId: "gemini-code-assitance-6c7b1"
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khởi tạo Firebase:", err.message);
+    process.exit(1); 
+  }
 }
 
 module.exports = async (req, res) => {
-  const db = admin.firestore();
+  // Thêm một lớp bảo mật đơn giản: chỉ cho phép gọi bằng khóa bí mật (nếu muốn)
+  // Ví dụ: const secret = req.headers['x-cron-secret'];
   
-  // Lưu ý: Vẫn giữ nguyên collection là 'pots' của bạn
-  const potRef = db.collection('pots').doc('pot_001');
-  const doc = await potRef.get();
-  
-  if (doc.exists) {
-    const data = doc.data();
+  try {
+    const db = admin.firestore();
+    const potsSnapshot = await db.collection('pots').get();
     
-    // KỊCH BẢN 1: THIẾT BỊ OFFLINE
-    if (data.isOnline === false && data.alertSent !== true) {
-      const messageOffline = {
-        notification: { 
-          title: '⚠️ Cảnh báo Smart Pot', 
-          body: 'Cây của bạn đã mất kết nối! Kiểm tra nguồn điện ngay.' 
-        },
-        topic: 'all_users'
-      };
-      
-      await admin.messaging().send(messageOffline);
-      await potRef.update({ alertSent: true }); // Khóa cờ lại
-      return res.status(200).send('Đã gửi thông báo OFFLINE!');
-    } 
-    
-    // KỊCH BẢN 2: THIẾT BỊ ONLINE TRỞ LẠI
-    if (data.isOnline === true && data.alertSent === true) {
-      const messageOnline = {
-        notification: { 
-          title: '✅ Smart Pot đã Online', 
-          body: 'Thiết bị đã được cấp điện và kết nối lại thành công.' 
-        },
-        topic: 'all_users'
-      };
-      
-      await admin.messaging().send(messageOnline);
-      await potRef.update({ alertSent: false }); // Mở cờ ra cho lần sau
-      return res.status(200).send('Đã gửi thông báo ONLINE!');
+    if (potsSnapshot.empty) {
+      return res.status(200).send('Không có thiết bị.');
     }
 
-    // KỊCH BẢN 3: ĐANG BÌNH THƯỜNG (Không có gì thay đổi)
-    return res.status(200).send('Trạng thái bình thường. Không cần gửi Noti.');
+    const results = []; // Để theo dõi kết quả
+
+    for (const doc of potsSnapshot.docs) {
+      const data = doc.data();
+      const potRef = doc.ref;
+
+      if (data.hasOwnProperty('isOnline')) {
+        // Xử lý Offline
+        if (data.isOnline === false && data.alertSent !== true) {
+          await admin.messaging().send({
+            notification: { 
+              title: '⚠️ Cảnh báo Smart Pot', 
+              body: `Thiết bị ${data.deviceId || doc.id} đã mất kết nối!` 
+            },
+            topic: 'all_users'
+          });
+          await potRef.update({ alertSent: true });
+          results.push(`${doc.id}: Đã gửi cảnh báo Offline`);
+        } 
+        // Xử lý Online
+        else if (data.isOnline === true && data.alertSent === true) {
+          await admin.messaging().send({
+            notification: { 
+              title: '✅ Smart Pot đã Online', 
+              body: `Thiết bị ${data.deviceId || doc.id} đã kết nối lại.` 
+            },
+            topic: 'all_users'
+          });
+          await potRef.update({ alertSent: false });
+          results.push(`${doc.id}: Đã gửi thông báo Online`);
+        }
+      }
+    }
+    
+    return res.status(200).json({ status: 'success', details: results });
+    
+  } catch (error) {
+    console.error("❌ Lỗi Cron Job:", error);
+    return res.status(500).json({ error: error.message });
   }
-  
-  return res.status(404).send('Không tìm thấy thiết bị.');
 };

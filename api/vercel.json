@@ -1,13 +1,8 @@
 {
-  "functions": {
-    "api/*.js": {
-      "runtime": "vercel-node@latest"
-    }
-  },
-  "crons": [
+  "rewrites": [
     {
-      "path": "/api/check-pot",
-      "schedule": "*/5 * * * *" 
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }
