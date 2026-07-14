@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 final sensorRepositoryProvider = Provider<SensorRepository>((ref) {
   return SensorRepository(FirebaseFirestore.instance);
@@ -29,10 +30,14 @@ class SensorRepository {
         .snapshots()
         .map((snapshot) {
       if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data();
-        data['docId'] = snapshot.docs.first.id; 
-        return data;
-      }
+          final data = snapshot.docs.first.data();
+          final potId = snapshot.docs.first.id;
+          data['docId'] = potId;
+          
+          FirebaseMessaging.instance.subscribeToTopic('pot_$potId');
+          
+          return data;
+        }
       return _defaultEmptyData();
     });
   }
@@ -42,7 +47,6 @@ class SensorRepository {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('Chưa đăng nhập');
 
-      // Tìm chậu cây của user này
       final snapshot = await _firestore.collection('pots')
           .where('ownerId', isEqualTo: user.uid)
           .limit(1)

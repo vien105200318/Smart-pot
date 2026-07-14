@@ -27,15 +27,11 @@ void main() async {
 Future<void> setupPushNotifications() async {
   final messaging = FirebaseMessaging.instance;
 
-  final settings = await messaging.requestPermission(
+  await messaging.requestPermission(
     alert: true,
     badge: true,
     sound: true,
   );
-
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    await messaging.subscribeToTopic('all_users');
-  }
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     NotificationService.showLocalNotification(
