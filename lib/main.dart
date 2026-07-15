@@ -6,6 +6,8 @@ import 'package:smart_pot/core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
+import 'package:smart_pot/l10n/app_localizations.dart';
+import 'package:smart_pot/core/providers/locale_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -48,11 +50,11 @@ class SmartPotApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeModeProvider);
-
+    final locale = ref.watch(localeProvider);
+    final goRouter = ref.watch(goRouterProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false, 
       title: 'Smart Pot',
-      routerConfig: ref.watch(goRouterProvider),
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
         brightness: Brightness.light,
@@ -68,6 +70,11 @@ class SmartPotApp extends ConsumerWidget {
           primary: Color(0xFF00C896),
         ),
       ),
+      locale: locale, 
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      
+      routerConfig: ref.watch(goRouterProvider),
     );
   }
 }

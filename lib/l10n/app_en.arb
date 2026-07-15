@@ -1,0 +1,47 @@
+{
+  "@@locale": "en",
+  "home": "Home",
+  "devices": "Devices",
+  "camera": "Camera",
+  "history": "History",
+  "settings": "Settings",
+  "soilMoisture": "Soil Moisture",
+  "temperature": "Temperature",
+  "airHumidity": "Air Humidity",
+  "waterTank": "Water Tank",
+  "waterNow": "Water Now",
+  "watering": "Watering...",
+  "mistNow": "Mist Now",
+  "misting": "Misting...",
+  "online": "Online",
+  "offline": "Offline",
+  "historyData": "History Data",
+  "historyDesc": "Monitor all environmental trends over time.",
+  "filter1Day": "1 Day",
+  "filter1Week": "1 Week",
+  "filter1Month": "1 Month",
+  "filterAllTime": "All Time",
+  "noDeviceConnected": "No devices connected.",
+  "noData": "No data available for this period.",
+  "airHumidChart": "Air Humidity (%)",
+  "soilMoistChart": "Soil Moisture (%)",
+  "waterDurationChart": "Watering Duration (mins)",
+  "recentActivities": "Recent Activities",
+  "noRecentActivities": "No recent activities.",
+  "connectedDevices": "Connected Devices",
+  "devicesDesc": "Manage your hardware components and sensors.",
+  "standby": "Standby",
+  "reading": "Reading",
+  "esp32Board": "ESP32 Main Board",
+  "waterPumpRelay": "Water Pump Relay",
+  "mistMaker": "Ultrasonic Mist Maker",
+  "envSensors": "Environment Sensors",
+  "syncError": "Sync error: {error}",
+  "@syncError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 
 class HistoryTab extends ConsumerStatefulWidget {
@@ -13,7 +14,7 @@ class HistoryTab extends ConsumerStatefulWidget {
 }
 
 class _HistoryTabState extends ConsumerState<HistoryTab> {
-  String _selectedFilter = '1 Week';
+  String _selectedFilter = '1 Week'; 
 
   DateTime _getFilterDate() {
     final now = DateTime.now();
@@ -30,9 +31,20 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
     }
   }
 
+  String _getTranslatedFilter(String filter, AppLocalizations lang) {
+    switch (filter) {
+      case '1 Day': return lang.filter1Day;
+      case '1 Week': return lang.filter1Week;
+      case '1 Month': return lang.filter1Month;
+      case 'All Time': return lang.filterAllTime;
+      default: return filter;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sensorAsyncValue = ref.watch(sensorStreamProvider);
+    final lang = AppLocalizations.of(context)!; 
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -40,28 +52,28 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'History Data',
-              style: TextStyle(
+            Text(
+              lang.historyData,
+              style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   letterSpacing: -0.5),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Monitor all environmental trends over time.',
-              style: TextStyle(color: Colors.white54, fontSize: 15),
+            Text(
+              lang.historyDesc,
+              style: const TextStyle(color: Colors.white54, fontSize: 15),
             ),
             const SizedBox(height: 32),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildFilterChip('1 Day'),
-                _buildFilterChip('1 Week'),
-                _buildFilterChip('1 Month'),
-                _buildFilterChip('All Time'),
+                _buildFilterChip('1 Day', lang),
+                _buildFilterChip('1 Week', lang),
+                _buildFilterChip('1 Month', lang),
+                _buildFilterChip('All Time', lang),
               ],
             ),
             const SizedBox(height: 24),
@@ -73,11 +85,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                 child: CircularProgressIndicator(color: Color(0xFF00C896)),
               )),
               error: (err, stack) => Center(
-                  child: Text('Lỗi: $err', style: const TextStyle(color: Colors.redAccent))),
+                  child: Text(lang.syncError(err.toString()), style: const TextStyle(color: Colors.redAccent))),
               data: (sensorData) {
                 final docId = sensorData['docId'] as String?;
                 
-                // Nếu không có docId (chưa kết nối chậu)
                 if (docId == null || docId.isEmpty) {
                   return Container(
                     height: 200,
@@ -86,9 +97,9 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                       color: const Color(0xFF161B22),
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Text(
-                      'Chưa có thiết bị nào được kết nối.',
-                      style: TextStyle(color: Colors.white38),
+                    child: Text(
+                      lang.noDeviceConnected,
+                      style: const TextStyle(color: Colors.white38),
                     ),
                   );
                 }
@@ -124,9 +135,9 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                               color: const Color(0xFF161B22),
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            child: const Text(
-                              'Không có dữ liệu trong thời gian này.',
-                              style: TextStyle(color: Colors.white38),
+                            child: Text(
+                              lang.noData,
+                              style: const TextStyle(color: Colors.white38),
                             ),
                           );
                         }
@@ -158,7 +169,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                         return Column(
                           children: [
                             _buildMiniChart(
-                              title: 'Air Humidity (%)',
+                              title: lang.airHumidChart,
                               color: Colors.lightBlueAccent,
                               spots: airSpots,
                               dates: dates,
@@ -166,7 +177,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             ),
                             const SizedBox(height: 16),
                             _buildMiniChart(
-                              title: 'Soil Moisture (%)',
+                              title: lang.soilMoistChart,
                               color: const Color(0xFF00C896),
                               spots: soilSpots,
                               dates: dates,
@@ -174,7 +185,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             ),
                             const SizedBox(height: 16),
                             _buildMiniChart(
-                              title: 'Watering Duration (mins)',
+                              title: lang.waterDurationChart,
                               color: Colors.orangeAccent,
                               spots: waterSpots,
                               dates: dates,
@@ -187,9 +198,9 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                     ),
 
                     const SizedBox(height: 40),
-                    const Text(
-                      'Recent Activities',
-                      style: TextStyle(
+                    Text(
+                      lang.recentActivities,
+                      style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white),
@@ -215,9 +226,9 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                         }
                         final docs = snapshot.data?.docs ?? [];
                         if (docs.isEmpty) {
-                          return const Center(
-                              child: Text('No recent activities.',
-                                  style: TextStyle(color: Colors.white38)));
+                          return Center(
+                              child: Text(lang.noRecentActivities,
+                                  style: const TextStyle(color: Colors.white38)));
                         }
                         return ListView.builder(
                           shrinkWrap: true,
@@ -239,10 +250,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             Color iconColor = Colors.white54;
                             final actionLower = action.toString().toLowerCase();
                             if (actionLower.contains('tưới') ||
-                                actionLower.contains('bơm')) {
+                                actionLower.contains('bơm') || actionLower.contains('water')) {
                               iconData = Icons.water_drop;
                               iconColor = const Color(0xFF00C896);
-                            } else if (actionLower.contains('sương')) {
+                            } else if (actionLower.contains('sương') || actionLower.contains('mist')) {
                               iconData = Icons.cloudy_snowing;
                               iconColor = Colors.lightBlueAccent;
                             }
@@ -294,10 +305,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
     );
   }
 
-  Widget _buildFilterChip(String label) {
-    bool isActive = _selectedFilter == label;
+  Widget _buildFilterChip(String filterKey, AppLocalizations lang) {
+    bool isActive = _selectedFilter == filterKey;
     return GestureDetector(
-      onTap: () => setState(() => _selectedFilter = label),
+      onTap: () => setState(() => _selectedFilter = filterKey),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -311,7 +322,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                   ? const Color(0xFF00C896).withOpacity(0.5)
                   : Colors.white12),
         ),
-        child: Text(label,
+        child: Text(_getTranslatedFilter(filterKey, lang), // Thay vì in text cứng, dịch nó ra
             style: TextStyle(
                 color: isActive ? const Color(0xFF00C896) : Colors.white54,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,

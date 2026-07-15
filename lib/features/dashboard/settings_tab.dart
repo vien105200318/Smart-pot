@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
+import 'package:smart_pot/core/providers/locale_provider.dart';
+import 'package:smart_pot/l10n/app_localizations.dart';
 
 class LanguageNotifier extends Notifier<String> {
   @override
@@ -32,9 +34,16 @@ class SettingsTab extends ConsumerWidget {
     final displayName = user?.displayName ?? 'Người dùng Smart Pot';
     final email = user?.email ?? 'Chưa cập nhật email';
     final photoURL = user?.photoURL;
-
+    final currentLocale = ref.watch(localeProvider);
+    final lang = AppLocalizations.of(context)!;
     final currentLanguage = ref.watch(languageProvider);
     final isNotiEnabled = ref.watch(notificationProvider);
+    
+    String getLanguageName(Locale loc){
+    if (loc.languageCode == 'vi') return 'Tiếng Việt';
+      if (loc.languageCode == 'ja') return '日本語';
+      return 'English';
+    }
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -177,10 +186,10 @@ class SettingsTab extends ConsumerWidget {
             ),
             _buildSettingsTile(
               icon: Icons.language,
-              title: 'Language',
-              subtitle: currentLanguage,
+              title: lang.settings,
+              subtitle: getLanguageName(currentLocale),
               color: Colors.orangeAccent,
-              onTap: () => _showLanguagePicker(context, ref, currentLanguage),
+              onTap: () => _showLanguagePicker(context, ref, currentLocale),
             ),
             const SizedBox(height: 32),
             const Text('DEVICE', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
@@ -225,30 +234,29 @@ class SettingsTab extends ConsumerWidget {
     );
   }
 
-  void _showLanguagePicker(BuildContext context, WidgetRef ref, String currentLang) {
-    final languages = ['Tiếng Việt', 'English', '日本語'];
-    
+void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLocale) {
+      final locales = [
+      {'code': 'vi', 'name': 'Tiếng Việt'},
+      {'code': 'en', 'name': 'English'},
+      {'code': 'ja', 'name': '日本語'},
+    ];
+
+
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF161B22),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Select Language', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...languages.map((lang) => ListTile(
-              title: Text(lang, style: TextStyle(color: currentLang == lang ? const Color(0xFF00C896) : Colors.white)),
-              trailing: currentLang == lang ? const Icon(Icons.check_circle, color: Color(0xFF00C896)) : null,
-              onTap: () {
-                ref.read(languageProvider.notifier).setLanguage(lang);
-                Navigator.pop(ctx);
-              },
-            )),
-          ],
-        ),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: locales.map((item) {
+          final isSelected = currentLocale.languageCode == item['code'];
+          return ListTile(
+            title: Text(item['name']!, style: TextStyle(color: isSelected ? const Color(0xFF00C896) : Colors.white)),
+            onTap: () {
+              ref.read(localeProvider.notifier).setLocale(Locale(item['code']!));
+              Navigator.pop(ctx);
+            },
+          );
+        }).toList(),
       ),
     );
   }

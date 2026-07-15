@@ -1,6 +1,5 @@
 const admin = require('firebase-admin');
 
-// Khởi tạo Admin SDK
 if (!admin.apps.length) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -8,7 +7,6 @@ if (!admin.apps.length) {
       credential: admin.credential.cert(serviceAccount),
       projectId: "gemini-code-assitance-6c7b1"
     });
-    console.log("✅ Firebase Admin khởi tạo thành công!");
   } catch (err) {
     console.error("❌ Lỗi khởi tạo Firebase:", err.message);
     process.exit(1); 
@@ -21,64 +19,58 @@ module.exports = async (req, res) => {
     const potsSnapshot = await db.collection('pots').get();
     
     if (potsSnapshot.empty) {
-      return res.status(200).json({ status: 'ok', message: 'Không có thiết bị nào trong hệ thống.' });
+      return res.status(200).json({ status: 'ok', message: 'Không có thiết bị.' });
     }
 
     const results = []; 
+    const now = Date.now();
 
     for (const doc of potsSnapshot.docs) {
       const data = doc.data();
       const potRef = doc.ref;
 
-      // Chỉ xử lý nếu document có trường isOnline
-      if (data.hasOwnProperty('isOnline')) {
-        
-        // Kịch bản 1: Thiết bị OFFLINE
-        if (data.isOnline === false && data.alertSent !== true) {
-          await admin.messaging().send({
-            notification: { 
-              title: '⚠️ Cảnh báo Smart Pot', 
-              body: `Thiết bị ${data.deviceId || doc.id} đã mất kết nối!` 
-            },
-            topic: 'all_users'
-          });
-          await potRef.update({ alertSent: true });
-          results.push(`${doc.id}: Đã gửi cảnh báo Offline`);
-        } 
-        
-        // Kịch bản 2: Thiết bị ONLINE trở lại
-        else if (data.isOnline === true && data.alertSent === true) {
-          await admin.messaging().send({
-            notification: { 
-              title: '✅ Smart Pot đã Online', 
-              body: `Thiết bị ${data.deviceId || doc.id} đã kết nối lại.` 
-            },
-            topic: 'all_users'
-          });
-          await potRef.update({ alertSent: false });
-          results.push(`${doc.id}: Đã gửi thông báo Online`);
-        } 
-        
-        // Thiết bị bình thường
-        else {
-          results.push(`${doc.id}: Bình thường (Online: ${data.isOnline})`);
-        }
+      // 1. TÍNH TOÁN ONLINE/OFFLINE TỰ ĐỘNG
+      // Lấy timestamp từ Firebase (lastUpdated)
+      const lastUpdated = data.lastUpdated ? data.lastUpdated.toMillis() : 0; 
+      const timeDiffMinutes = (now - lastUpdated) / (1000 * 60);
+
+      let currentStatus = data.isOnline;
+
+      // Nếu quá 3 phút (theo khoảng gửi của ESP32) mà không có data -> Ép Offline
+      if (timeDiffMinutes > 3 && data.isOnline === true) {
+        await potRef.update({ isOnline: false });
+        currentStatus = false;
+        results.push(`${doc.id}: Đã chuyển sang OFFLINE (timeout)`);
+      } 
+      // Nếu có data mới -> Ép Online
+      else if (timeDiffMinutes <= 3 && data.isOnline === false) {
+        await potRef.update({ isOnline: true });
+        currentStatus = true;
+        results.push(`${doc.id}: Đã chuyển sang ONLINE`);
+      }
+
+      // 2. GỬI NOTIFICATION (Chỉ gửi khi có sự thay đổi trạng thái)
+      // Cảnh báo Offline
+      if (currentStatus === false && data.alertSent !== true) {
+        await admin.messaging().send({
+          notification: { title: '⚠️ Smart Pot mất kết nối', body: `Thiết bị ${data.deviceId || doc.id} đã offline!` },
+          topic: 'all_users'
+        });
+        await potRef.update({ alertSent: true });
+      } 
+      // Thông báo Online lại
+      else if (currentStatus === true && data.alertSent === true) {
+        await admin.messaging().send({
+          notification: { title: '✅ Smart Pot đã Online', body: `Thiết bị ${data.deviceId || doc.id} đã kết nối lại.` },
+          topic: 'all_users'
+        });
+        await potRef.update({ alertSent: false });
       }
     }
     
-    // Trả về JSON để nhìn cho chuyên nghiệp và dễ debug
-    return res.status(200).json({ 
-      status: 'success', 
-      checked_count: potsSnapshot.size,
-      details: results 
-    });
+    return res.status(200).json({ status: 'success', details: results });
     
   } catch (error) {
-    console.error("❌ Lỗi hệ thống:", error);
-    return res.status(500).json({ 
-      status: 'error', 
-      message: error.message,
-      stack: error.stack
-    });
+    return res.status(500).json({ status: 'error', message: error.message });
   }
 };

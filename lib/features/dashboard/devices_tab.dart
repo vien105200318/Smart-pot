@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/l10n/app_localizations.dart'; 
 import 'repositories/sensor_repository.dart';
 
 class DevicesTab extends ConsumerWidget {
@@ -8,6 +9,7 @@ class DevicesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sensorAsyncValue = ref.watch(sensorStreamProvider);
+    final lang = AppLocalizations.of(context)!; 
 
     return SafeArea(
       child: Padding(
@@ -15,21 +17,21 @@ class DevicesTab extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Connected Devices',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+            Text(
+              lang.connectedDevices,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Manage your hardware components and sensors.',
-              style: TextStyle(color: Colors.white54, fontSize: 16),
+            Text(
+              lang.devicesDesc,
+              style: const TextStyle(color: Colors.white54, fontSize: 16),
             ),
             const SizedBox(height: 24),
       
             Expanded(
               child: sensorAsyncValue.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-                error: (error, stack) => Center(child: Text('Lỗi đồng bộ: $error', style: const TextStyle(color: Colors.redAccent))),
+                error: (error, stack) => Center(child: Text(lang.syncError(error.toString()), style: const TextStyle(color: Colors.redAccent))),
                 data: (data) {
                   final bool isOnline = data['isOnline'] ?? false;
                   final bool isWatering = data['pumpStatus'] ?? false;
@@ -40,9 +42,9 @@ class DevicesTab extends ConsumerWidget {
                     children: [
                       _buildDeviceCard(
                         icon: Icons.memory,
-                        title: 'ESP32 Main Board',
+                        title: lang.esp32Board,
                         subtitle: 'Wi-Fi Module • IP: 192.168.1.45',
-                        status: isOnline ? 'Online' : 'Offline',
+                        status: isOnline ? lang.online : lang.offline,
                         statusColor: isOnline ? const Color(0xFF00C896) : Colors.redAccent,
                         isActive: isOnline,
                       ),
@@ -50,9 +52,9 @@ class DevicesTab extends ConsumerWidget {
                       
                       _buildDeviceCard(
                         icon: Icons.water_drop,
-                        title: 'Water Pump Relay',
+                        title: lang.waterPumpRelay,
                         subtitle: 'GPIO 4 • 5V DC Pump',
-                        status: isWatering ? 'Pumping...' : (isOnline ? 'Standby' : 'Offline'),
+                        status: isWatering ? lang.watering : (isOnline ? lang.standby : lang.offline),
                         statusColor: isWatering ? Colors.blueAccent : (isOnline ? Colors.orangeAccent : Colors.redAccent),
                         isActive: isWatering,
                       ),
@@ -60,9 +62,9 @@ class DevicesTab extends ConsumerWidget {
 
                       _buildDeviceCard(
                         icon: Icons.cloud,
-                        title: 'Ultrasonic Mist Maker',
+                        title: lang.mistMaker,
                         subtitle: 'GPIO 5 • 24V Humidifier',
-                        status: isMisting ? 'Misting...' : (isOnline ? 'Standby' : 'Offline'),
+                        status: isMisting ? lang.misting : (isOnline ? lang.standby : lang.offline),
                         statusColor: isMisting ? Colors.purpleAccent : (isOnline ? Colors.orangeAccent : Colors.redAccent),
                         isActive: isMisting,
                       ),
@@ -70,9 +72,9 @@ class DevicesTab extends ConsumerWidget {
 
                       _buildDeviceCard(
                         icon: Icons.sensors,
-                        title: 'Environment Sensors',
+                        title: lang.envSensors,
                         subtitle: 'DHT11 & Capacitive Soil',
-                        status: isOnline ? 'Reading' : 'Offline',
+                        status: isOnline ? lang.reading : lang.offline,
                         statusColor: isOnline ? const Color(0xFF00C896) : Colors.redAccent,
                         isActive: isOnline, 
                       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; 
 import 'package:smart_pot/features/dashboard/widgets/metric_card.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart'; 
+import 'package:smart_pot/l10n/app_localizations.dart';
 
 import 'devices_tab.dart';
 import 'camera_tab.dart';
@@ -21,7 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final sensorAsyncValue = ref.watch(sensorStreamProvider);
-
+    final lang = AppLocalizations.of(context)!;
     final dashboardTab = SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -98,10 +99,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       crossAxisSpacing: 16,
                       childAspectRatio: 1.3,
                       children: [
-                        MetricCard(title: 'Soil Moisture', value: '${moisture.toStringAsFixed(0)}%', icon: Icons.water_drop_outlined, color: const Color(0xFF00C896), progress: moisture / 100.0),
-                        MetricCard(title: 'Temperature', value: '${temperature.toStringAsFixed(1)}°C', icon: Icons.thermostat_outlined, color: Colors.orangeAccent, progress: temperature / 50.0),
-                        MetricCard(title: 'Air Humidity', value: '${humidity.toStringAsFixed(0)}%', icon: Icons.air_outlined, color: Colors.blueAccent, progress: humidity / 100.0),
-                        MetricCard(title: 'Water Tank', value: '${waterLevel.toStringAsFixed(0)}%', icon: Icons.opacity, color: Colors.tealAccent, progress: waterLevel / 100.0),
+                        MetricCard(title: lang.soilMoisture, value: '${moisture.toStringAsFixed(0)}%', icon: Icons.water_drop_outlined, color: const Color(0xFF00C896), progress: moisture / 100.0),
+                        MetricCard(title: lang.temperature, value: '${temperature.toStringAsFixed(1)}°C', icon: Icons.thermostat_outlined, color: Colors.orangeAccent, progress: temperature / 50.0),
+                        MetricCard(title: lang.airHumidity, value: '${humidity.toStringAsFixed(0)}%', icon: Icons.air_outlined, color: Colors.blueAccent, progress: humidity / 100.0),
+                        MetricCard(title: lang.waterTank, value: '${waterLevel.toStringAsFixed(0)}%', icon: Icons.opacity, color: Colors.tealAccent, progress: waterLevel / 100.0),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -125,7 +126,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                                   : const Icon(Icons.water_drop, size: 20),
                               label: Text(
-                                isWatering ? 'Watering...' : 'Water Now',
+                                isWatering ? 'Watering...' : lang.waterNow,
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -237,12 +238,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         backgroundColor: const Color(0xFF0D1117),
         selectedItemColor: const Color(0xFF00C896),
         unselectedItemColor: Colors.white54,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.sensors), label: 'Devices'),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: 'Camera'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), label: 'History'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: 'Settings'),
+        items:[
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: lang.home),
+          BottomNavigationBarItem(icon: Icon(Icons.sensors), label: lang.devices),
+          BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: lang.camera),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), label: lang.history),
+          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: lang.settings),
         ],
       ),
     );
