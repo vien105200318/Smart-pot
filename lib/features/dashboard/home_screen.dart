@@ -79,9 +79,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text('Lỗi Firebase: $error', style: const TextStyle(color: Colors.redAccent)),
               ),
               data: (sensorData) {
-                final moisture = (sensorData['moisture'] as num?)?.toDouble() ?? 0.0;
+                final moisture = ((sensorData['moisture'] ?? sensorData['soil_moisture']) as num?)?.toDouble() ?? 0.0;
                 final temperature = (sensorData['temperature'] as num?)?.toDouble() ?? 0.0;
-                final humidity = (sensorData['humidity'] as num?)?.toDouble() ?? 0.0;
+                final humidity = ((sensorData['humidity'] ?? sensorData['air_humidity']) as num?)?.toDouble() ?? 0.0;
                 final waterLevel = (sensorData['waterLevel'] as num?)?.toDouble() ?? 0.0;
 
                 final bool isWatering = sensorData['pumpStatus'] ?? false;
