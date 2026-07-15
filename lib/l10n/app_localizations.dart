@@ -321,6 +321,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync error: {error}'**
   String syncError(String error);
+
+  /// No description provided for @community.
+  ///
+  /// In en, this message translates to:
+  /// **'GreenVibe'**
+  String get community;
+
+  /// No description provided for @communityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your plant journey with others.'**
+  String get communityDesc;
+
+  /// No description provided for @newPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get newPost;
+
+  /// No description provided for @likes.
+  ///
+  /// In en, this message translates to:
+  /// **'Likes'**
+  String get likes;
+
+  /// No description provided for @comments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get comments;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @createPost.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Post'**
+  String get createPost;
+
+  /// No description provided for @whatsOnYourMind.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s on your mind about your plants?'**
+  String get whatsOnYourMind;
+
+  /// No description provided for @postBtn.
+  ///
+  /// In en, this message translates to:
+  /// **'Post'**
+  String get postBtn;
+
+  /// No description provided for @posting.
+  ///
+  /// In en, this message translates to:
+  /// **'Posting...'**
+  String get posting;
 }
 
 class _AppLocalizationsDelegate

@@ -36,5 +36,15 @@
   "waterPumpRelay": "水ポンプリレー",
   "mistMaker": "超音波ミストメーカー",
   "envSensors": "環境センサー",
-  "syncError": "同期エラー: {error}"
+  "syncError": "同期エラー: {error}",
+  "community": "GreenVibe",
+  "communityDesc": "植物の成長をみんなと共有しましょう。",
+  "newPost": "投稿",
+  "likes": "いいね",
+  "comments": "コメント",
+  "share": "共有",
+  "createPost": "投稿を作成",
+  "whatsOnYourMind": "植物について何を考えていますか？",
+  "postBtn": "投稿",
+  "posting": "投稿中..."
 }

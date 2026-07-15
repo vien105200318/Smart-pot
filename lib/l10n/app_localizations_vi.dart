@@ -120,4 +120,34 @@ class AppLocalizationsVi extends AppLocalizations {
   String syncError(String error) {
     return 'Lỗi đồng bộ: $error';
   }
+
+  @override
+  String get community => 'GreenVibe';
+
+  @override
+  String get communityDesc => 'Chia sẻ hành trình chăm cây của bạn.';
+
+  @override
+  String get newPost => 'Đăng bài';
+
+  @override
+  String get likes => 'Thích';
+
+  @override
+  String get comments => 'Bình luận';
+
+  @override
+  String get share => 'Chia sẻ';
+
+  @override
+  String get createPost => 'Tạo bài viết';
+
+  @override
+  String get whatsOnYourMind => 'Chậu cây của bạn hôm nay thế nào?';
+
+  @override
+  String get postBtn => 'Đăng';
+
+  @override
+  String get posting => 'Đang đăng...';
 }

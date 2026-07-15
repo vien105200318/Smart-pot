@@ -24,11 +24,21 @@ class NotificationNotifier extends Notifier<bool> {
 
 final notificationProvider = NotifierProvider<NotificationNotifier, bool>(NotificationNotifier.new);
 
-class SettingsTab extends ConsumerWidget {
+class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsTab> createState() => _SettingsTabState();
+}
+class _SettingsTabState extends ConsumerState<SettingsTab> {
+    User? user;
+    @override
+    void initState() {
+      super.initState();
+      user = FirebaseAuth.instance.currentUser;
+  }
+
+  Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final currentUid = user?.uid ?? '';
     final displayName = user?.displayName ?? 'Người dùng Smart Pot';
@@ -81,7 +91,7 @@ class SettingsTab extends ConsumerWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () => _showEditProfileDialog(context, displayName),
                   icon: const Icon(Icons.edit_outlined, color: Colors.white54),
                 )
               ],
@@ -230,6 +240,73 @@ class SettingsTab extends ConsumerWidget {
             const SizedBox(height: 24),
           ],
         ),
+      ),
+    );
+  }
+  Future<void> _showEditProfileDialog(BuildContext context, String currentName) async {
+    final defaultName = currentName == 'Người dùng Smart Pot' ? '' : currentName;
+    final TextEditingController nameController = TextEditingController(text: defaultName);
+    bool isLoading = false;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF161B22),
+            title: const Text('Cập nhật tài khoản', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            content: TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Tên hiển thị của bạn',
+                labelStyle: TextStyle(color: Colors.white54),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00C896))),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+              ),
+              ElevatedButton(
+                onPressed: isLoading ? null : () async {
+                  final newName = nameController.text.trim();
+                  if (newName.isEmpty) return;
+
+                  setStateDialog(() => isLoading = true);
+                  
+                  try {
+                    await FirebaseAuth.instance.currentUser?.updateDisplayName(newName);
+                    await FirebaseAuth.instance.currentUser?.reload();
+                    
+                    if (mounted) {
+                      Navigator.pop(ctx);
+                      
+                      setState(() {
+                        user = FirebaseAuth.instance.currentUser; 
+                      });
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Cập nhật tên thành công! 🌱'), backgroundColor: Color(0xFF00C896))
+                      );
+                    }
+                  } catch (e) {
+                    setStateDialog(() => isLoading = false);
+                    if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.redAccent));
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00C896)),
+                child: isLoading 
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                  : const Text('Lưu', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        }
       ),
     );
   }

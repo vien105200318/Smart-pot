@@ -120,4 +120,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String syncError(String error) {
     return 'Sync error: $error';
   }
+
+  @override
+  String get community => 'GreenVibe';
+
+  @override
+  String get communityDesc => 'Share your plant journey with others.';
+
+  @override
+  String get newPost => 'Post';
+
+  @override
+  String get likes => 'Likes';
+
+  @override
+  String get comments => 'Comments';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get createPost => 'Create Post';
+
+  @override
+  String get whatsOnYourMind => 'What\'s on your mind about your plants?';
+
+  @override
+  String get postBtn => 'Post';
+
+  @override
+  String get posting => 'Posting...';
 }

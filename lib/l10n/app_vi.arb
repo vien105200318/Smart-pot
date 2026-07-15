@@ -36,5 +36,15 @@
   "waterPumpRelay": "Rơ-le Bơm nước",
   "mistMaker": "Máy phun sương",
   "envSensors": "Cảm biến môi trường",
-  "syncError": "Lỗi đồng bộ: {error}"
+  "syncError": "Lỗi đồng bộ: {error}",
+  "community": "GreenVibe",
+  "communityDesc": "Chia sẻ hành trình chăm cây của bạn.",
+  "newPost": "Đăng bài",
+  "likes": "Thích",
+  "comments": "Bình luận",
+  "share": "Chia sẻ",
+  "createPost": "Tạo bài viết",
+  "whatsOnYourMind": "Chậu cây của bạn hôm nay thế nào?",
+  "postBtn": "Đăng",
+  "posting": "Đang đăng..."
 }

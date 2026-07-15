@@ -120,4 +120,34 @@ class AppLocalizationsJa extends AppLocalizations {
   String syncError(String error) {
     return '同期エラー: $error';
   }
+
+  @override
+  String get community => 'GreenVibe';
+
+  @override
+  String get communityDesc => '植物の成長をみんなと共有しましょう。';
+
+  @override
+  String get newPost => '投稿';
+
+  @override
+  String get likes => 'いいね';
+
+  @override
+  String get comments => 'コメント';
+
+  @override
+  String get share => '共有';
+
+  @override
+  String get createPost => '投稿を作成';
+
+  @override
+  String get whatsOnYourMind => '植物について何を考えていますか？';
+
+  @override
+  String get postBtn => '投稿';
+
+  @override
+  String get posting => '投稿中...';
 }

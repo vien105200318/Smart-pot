@@ -6,6 +6,7 @@ import 'package:smart_pot/l10n/app_localizations.dart';
 
 import 'devices_tab.dart';
 import 'camera_tab.dart';
+import 'community_tab.dart';
 import 'history_tab.dart';
 import 'settings_tab.dart';
 
@@ -226,7 +227,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           dashboardTab,          // Index 0
           const DevicesTab(),    // Index 1
-          const CameraTab(),     // Index 2
+          const CommunityTab(),     // Index 2
           const HistoryTab(),    // Index 3
           const SettingsTab(),   // Index 4
         ],
@@ -241,7 +242,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         items:[
           BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: lang.home),
           BottomNavigationBarItem(icon: Icon(Icons.sensors), label: lang.devices),
-          BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: lang.camera),
+          BottomNavigationBarItem(icon: const Icon(Icons.people_outline), activeIcon: const Icon(Icons.people), label: lang.community),
           BottomNavigationBarItem(icon: Icon(Icons.bar_chart_outlined), label: lang.history),
           BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), label: lang.settings),
         ],
