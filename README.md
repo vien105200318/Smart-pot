@@ -169,7 +169,7 @@ pio run --target upload
 ## 🚧 V1.5
 
 - [ ] Camera snapshot integration
-- [ ] Multi-pot management
+- [x] Multi-pot management
 
 ---
 

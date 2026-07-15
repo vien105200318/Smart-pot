@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 
-class HistoryTab extends StatefulWidget {
+class HistoryTab extends ConsumerStatefulWidget {
   const HistoryTab({super.key});
 
   @override
-  State<HistoryTab> createState() => _HistoryTabState();
+  ConsumerState<HistoryTab> createState() => _HistoryTabState();
 }
 
-class _HistoryTabState extends State<HistoryTab> {
+class _HistoryTabState extends ConsumerState<HistoryTab> {
   String _selectedFilter = '1 Week';
 
   DateTime _getFilterDate() {
@@ -30,6 +32,8 @@ class _HistoryTabState extends State<HistoryTab> {
 
   @override
   Widget build(BuildContext context) {
+    final sensorAsyncValue = ref.watch(sensorStreamProvider);
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -51,9 +55,6 @@ class _HistoryTabState extends State<HistoryTab> {
             ),
             const SizedBox(height: 32),
 
-            // ==========================================
-            // BỘ LỌC THỜI GIAN
-            // ==========================================
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -65,29 +66,19 @@ class _HistoryTabState extends State<HistoryTab> {
             ),
             const SizedBox(height: 24),
 
-            // ==========================================
-            // TÁCH 3 BIỂU ĐỒ ĐỘC LẬP
-            // ==========================================
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('pots')
-                  .doc('pot_001')
-                  .collection('sensor_history')
-                  .where('timestamp', isGreaterThanOrEqualTo: _getFilterDate())
-                  .orderBy('timestamp')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    height: 300,
-                    child: Center(
-                        child: CircularProgressIndicator(color: Color(0xFF00C896))),
-                  );
-                }
-
-                final docs = snapshot.data?.docs ?? [];
-
-                if (docs.isEmpty) {
+            sensorAsyncValue.when(
+              loading: () => const Center(
+                  child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(color: Color(0xFF00C896)),
+              )),
+              error: (err, stack) => Center(
+                  child: Text('Lỗi: $err', style: const TextStyle(color: Colors.redAccent))),
+              data: (sensorData) {
+                final docId = sensorData['docId'] as String?;
+                
+                // Nếu không có docId (chưa kết nối chậu)
+                if (docId == null || docId.isEmpty) {
                   return Container(
                     height: 200,
                     alignment: Alignment.center,
@@ -96,161 +87,204 @@ class _HistoryTabState extends State<HistoryTab> {
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: const Text(
-                      'Không có dữ liệu trong thời gian này.',
+                      'Chưa có thiết bị nào được kết nối.',
                       style: TextStyle(color: Colors.white38),
                     ),
                   );
                 }
 
-                List<FlSpot> airSpots = [];
-                List<FlSpot> soilSpots = [];
-                List<FlSpot> waterSpots = [];
-                List<DateTime> dates = [];
-
-                double maxSoil = 100; // Tìm giá trị cao nhất để fix trục Y
-
-                for (int i = 0; i < docs.length; i++) {
-                  final data = docs[i].data() as Map<String, dynamic>;
-                  
-                  final airHum = (data['air_humidity'] ?? 0).toDouble();
-                  final soilMoi = (data['soil_moisture'] ?? 0).toDouble();
-                  final waterDur = (data['water_duration'] ?? 0).toDouble();
-                  
-                  if (soilMoi > maxSoil) maxSoil = soilMoi; // Nới rộng đồ thị nếu cảm biến lố 100
-
-                  if (data['timestamp'] != null) {
-                    dates.add((data['timestamp'] as Timestamp).toDate());
-                    double x = i.toDouble();
-                    airSpots.add(FlSpot(x, airHum));
-                    soilSpots.add(FlSpot(x, soilMoi));
-                    waterSpots.add(FlSpot(x, waterDur));
-                  }
-                }
-
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildMiniChart(
-                      title: 'Air Humidity (%)',
-                      color: Colors.lightBlueAccent,
-                      spots: airSpots,
-                      dates: dates,
-                      maxY: 100,
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('pots')
+                          .doc(docId) 
+                          .collection('sensor_history')
+                          .where('timestamp', isGreaterThanOrEqualTo: _getFilterDate())
+                          .orderBy('timestamp')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const SizedBox(
+                            height: 300,
+                            child: Center(
+                                child: CircularProgressIndicator(
+                                    color: Color(0xFF00C896))),
+                          );
+                        }
+
+                        final docs = snapshot.data?.docs ?? [];
+
+                        if (docs.isEmpty) {
+                          return Container(
+                            height: 200,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF161B22),
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Text(
+                              'Không có dữ liệu trong thời gian này.',
+                              style: TextStyle(color: Colors.white38),
+                            ),
+                          );
+                        }
+
+                        List<FlSpot> airSpots = [];
+                        List<FlSpot> soilSpots = [];
+                        List<FlSpot> waterSpots = [];
+                        List<DateTime> dates = [];
+                        double maxSoil = 100;
+
+                        for (int i = 0; i < docs.length; i++) {
+                          final data = docs[i].data() as Map<String, dynamic>;
+
+                          final airHum = (data['humidity'] ?? 0).toDouble(); 
+                          final soilMoi = (data['moisture'] ?? 0).toDouble(); 
+                          final waterDur = (data['water_duration'] ?? 0).toDouble();
+
+                          if (soilMoi > maxSoil) maxSoil = soilMoi;
+
+                          if (data['timestamp'] != null) {
+                            dates.add((data['timestamp'] as Timestamp).toDate());
+                            double x = i.toDouble();
+                            airSpots.add(FlSpot(x, airHum));
+                            soilSpots.add(FlSpot(x, soilMoi));
+                            waterSpots.add(FlSpot(x, waterDur));
+                          }
+                        }
+
+                        return Column(
+                          children: [
+                            _buildMiniChart(
+                              title: 'Air Humidity (%)',
+                              color: Colors.lightBlueAccent,
+                              spots: airSpots,
+                              dates: dates,
+                              maxY: 100,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildMiniChart(
+                              title: 'Soil Moisture (%)',
+                              color: const Color(0xFF00C896),
+                              spots: soilSpots,
+                              dates: dates,
+                              maxY: maxSoil > 100 ? maxSoil + 10 : 100,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildMiniChart(
+                              title: 'Watering Duration (mins)',
+                              color: Colors.orangeAccent,
+                              spots: waterSpots,
+                              dates: dates,
+                              maxY: 10,
+                              isWater: true,
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 40),
+                    const Text(
+                      'Recent Activities',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                     const SizedBox(height: 16),
-                    _buildMiniChart(
-                      title: 'Soil Moisture (%)',
-                      color: const Color(0xFF00C896),
-                      spots: soilSpots,
-                      dates: dates,
-                      maxY: maxSoil > 100 ? maxSoil + 10 : 100, // Căng trục Y theo dữ liệu thật
-                    ),
-                    const SizedBox(height: 16),
-                    _buildMiniChart(
-                      title: 'Watering Duration (mins)',
-                      color: Colors.orangeAccent,
-                      spots: waterSpots,
-                      dates: dates,
-                      maxY: 10, // Chỉnh xuống 10 phút cho đồ thị tưới nảy lên rõ hơn
-                      isWater: true, // Thêm chấm tròn cho thời gian tưới
+
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('pots')
+                          .doc(docId) 
+                          .collection('history')
+                          .orderBy('timestamp', descending: true)
+                          .limit(20) 
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                              child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: CircularProgressIndicator(
+                                color: Color(0xFF00C896)),
+                          ));
+                        }
+                        final docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
+                          return const Center(
+                              child: Text('No recent activities.',
+                                  style: TextStyle(color: Colors.white38)));
+                        }
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final data =
+                                docs[index].data() as Map<String, dynamic>;
+                            final action = data['action'] ?? 'Unknown';
+                            final value = data['value'] ?? '';
+                            DateTime time = DateTime.now();
+                            if (data['timestamp'] != null) {
+                              time = (data['timestamp'] as Timestamp).toDate();
+                            }
+                            final timeString =
+                                DateFormat('HH:mm - dd/MM/yyyy').format(time);
+
+                            IconData iconData = Icons.history;
+                            Color iconColor = Colors.white54;
+                            final actionLower = action.toString().toLowerCase();
+                            if (actionLower.contains('tưới') ||
+                                actionLower.contains('bơm')) {
+                              iconData = Icons.water_drop;
+                              iconColor = const Color(0xFF00C896);
+                            } else if (actionLower.contains('sương')) {
+                              iconData = Icons.cloudy_snowing;
+                              iconColor = Colors.lightBlueAccent;
+                            }
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF161B22),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: Colors.white.withOpacity(0.05),
+                                    width: 1.5),
+                              ),
+                              child: ListTile(
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                      color: iconColor.withOpacity(0.1),
+                                      shape: BoxShape.circle),
+                                  child: Icon(iconData,
+                                      color: iconColor, size: 20),
+                                ),
+                                title: Text(action,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.white)),
+                                subtitle: Text(timeString,
+                                    style: const TextStyle(
+                                        color: Colors.white38, fontSize: 12)),
+                                trailing: Text(value,
+                                    style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF00C896),
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
                   ],
-                );
-              },
-            ),
-
-            const SizedBox(height: 40),
-
-            // ==========================================
-            // DANH SÁCH LỊCH SỬ HOẠT ĐỘNG
-            // ==========================================
-            const Text(
-              'Recent Activities',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('pots')
-                  .doc('pot_001')
-                  .collection('history')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                      child: Padding(
-                    padding: EdgeInsets.all(20.0),
-                    child: CircularProgressIndicator(color: Color(0xFF00C896)),
-                  ));
-                }
-                final docs = snapshot.data?.docs ?? [];
-                if (docs.isEmpty) {
-                  return const Center(
-                      child: Text('No recent activities.',
-                          style: TextStyle(color: Colors.white38)));
-                }
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final data = docs[index].data() as Map<String, dynamic>;
-                    final action = data['action'] ?? 'Unknown';
-                    final value = data['value'] ?? '';
-                    DateTime time = DateTime.now();
-                    if (data['timestamp'] != null) {
-                      time = (data['timestamp'] as Timestamp).toDate();
-                    }
-                    final timeString =
-                        DateFormat('HH:mm - dd/MM/yyyy').format(time);
-
-                    IconData iconData = Icons.history;
-                    Color iconColor = Colors.white54;
-                    final actionLower = action.toString().toLowerCase();
-                    if (actionLower.contains('tưới') ||
-                        actionLower.contains('bơm')) {
-                      iconData = Icons.water_drop;
-                      iconColor = const Color(0xFF00C896);
-                    } else if (actionLower.contains('sương')) {
-                      iconData = Icons.cloudy_snowing;
-                      iconColor = Colors.lightBlueAccent;
-                    }
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF161B22),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: Colors.white.withOpacity(0.05), width: 1.5),
-                      ),
-                      child: ListTile(
-                        leading: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: iconColor.withOpacity(0.1),
-                              shape: BoxShape.circle),
-                          child: Icon(iconData, color: iconColor, size: 20),
-                        ),
-                        title: Text(action,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: Colors.white)),
-                        subtitle: Text(timeString,
-                            style: const TextStyle(
-                                color: Colors.white38, fontSize: 12)),
-                        trailing: Text(value,
-                            style: const TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF00C896),
-                                fontWeight: FontWeight.w600)),
-                      ),
-                    );
-                  },
                 );
               },
             ),
@@ -286,7 +320,6 @@ class _HistoryTabState extends State<HistoryTab> {
     );
   }
 
-  // Widget vẽ biểu đồ con (Mini Chart)
   Widget _buildMiniChart({
     required String title,
     required Color color,
@@ -296,7 +329,7 @@ class _HistoryTabState extends State<HistoryTab> {
     bool isWater = false,
   }) {
     return Container(
-      height: 200, // Chiều cao nhỏ gọn
+      height: 200,
       padding: const EdgeInsets.only(right: 24, left: 12, top: 20, bottom: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF161B22),
@@ -329,7 +362,7 @@ class _HistoryTabState extends State<HistoryTab> {
           Expanded(
             child: LineChart(
               LineChartData(
-                clipData: const FlClipData.all(), // GIỮ BẢN VẼ TRONG KHUNG, KHÔNG CHO TRÀN RA NGOÀI
+                clipData: const FlClipData.all(),
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -392,7 +425,7 @@ class _HistoryTabState extends State<HistoryTab> {
                     color: color,
                     barWidth: 3,
                     dotData: FlDotData(
-                      show: isWater, // Chỉ hiện chấm tròn nếu là đồ thị bơm nước
+                      show: isWater,
                       getDotPainter: (spot, percent, barData, index) =>
                           FlDotCirclePainter(
                         color: const Color(0xFF161B22),

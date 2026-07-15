@@ -1,19 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
 
-class SettingsTab extends StatelessWidget {
+class LanguageNotifier extends Notifier<String> {
+  @override
+  String build() => 'Tiếng Việt';
+  
+  void setLanguage(String lang) => state = lang;
+}
+
+final languageProvider = NotifierProvider<LanguageNotifier, String>(LanguageNotifier.new);
+
+class NotificationNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+  
+  void setNoti(bool val) => state = val;
+}
+
+final notificationProvider = NotifierProvider<NotificationNotifier, bool>(NotificationNotifier.new);
+
+class SettingsTab extends ConsumerWidget {
   const SettingsTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final user = FirebaseAuth.instance.currentUser;
     final currentUid = user?.uid ?? '';
     final displayName = user?.displayName ?? 'Người dùng Smart Pot';
     final email = user?.email ?? 'Chưa cập nhật email';
     final photoURL = user?.photoURL;
+
+    final currentLanguage = ref.watch(languageProvider);
+    final isNotiEnabled = ref.watch(notificationProvider);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -24,11 +45,7 @@ class SettingsTab extends StatelessWidget {
           children: [
             const Text(
               'Settings',
-              style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  letterSpacing: -0.5),
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5),
             ),
             const SizedBox(height: 32),
             Row(
@@ -37,9 +54,7 @@ class SettingsTab extends StatelessWidget {
                   radius: 36,
                   backgroundColor: const Color(0xFF00C896),
                   backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
-                  child: photoURL == null 
-                      ? const Icon(Icons.person, size: 40, color: Colors.black87) 
-                      : null,
+                  child: photoURL == null ? const Icon(Icons.person, size: 40, color: Colors.black87) : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -47,19 +62,12 @@ class SettingsTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(displayName,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Text(email,
-                          style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -71,29 +79,19 @@ class SettingsTab extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             const Text('DEVICE CONTROL',
-                style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2)),
+                style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('pots')
                   .where('ownerId', isEqualTo: currentUid)
+                  .limit(1)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Text('Lỗi tải dữ liệu',
-                      style: TextStyle(color: Colors.red));
-                }
-
+                if (snapshot.hasError) return const Text('Lỗi tải dữ liệu', style: TextStyle(color: Colors.red));
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF00C896)),
-                  );
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF00C896)));
                 }
-
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Container(
                     width: double.infinity,
@@ -107,16 +105,10 @@ class SettingsTab extends StatelessWidget {
                       children: [
                         const Icon(Icons.sensors_off, color: Colors.white38, size: 40),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Chưa có thiết bị nào được kết nối',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
+                        const Text('Chưa có thiết bị nào được kết nối', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
-                        Text(
-                          'Vui lòng cuộn xuống mục "Wi-Fi Configuration" bên dưới để cấu hình và nhận diện chậu cây.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
-                        ),
+                        Text('Vui lòng vào "Wi-Fi Configuration" để cài đặt.',
+                          textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13)),
                       ],
                     ),
                   );
@@ -134,64 +126,64 @@ class SettingsTab extends StatelessWidget {
                     _buildSwitchTile(
                       icon: Icons.water_drop,
                       title: 'Water Pump',
-                      subtitle: isPumpOn
-                          ? 'Đang bơm nước...'
-                          : 'Chạm để bơm thủ công',
+                      subtitle: isPumpOn ? 'Đang bơm nước...' : 'Chạm để bơm thủ công',
                       color: const Color(0xFF00C896),
                       value: isPumpOn,
-                      onChanged: (val) {
-                        FirebaseFirestore.instance
-                            .collection('pots')
-                            .doc(docId)
-                            .update({'pumpStatus': val});
-                      },
+                      onChanged: (val) => FirebaseFirestore.instance.collection('pots').doc(docId).update({'pumpStatus': val}),
                     ),
                     _buildSwitchTile(
                       icon: Icons.cloudy_snowing,
                       title: 'Mist System',
-                      subtitle: isMistOn
-                          ? 'Đang phun sương...'
-                          : 'Chạm để bật sương',
+                      subtitle: isMistOn ? 'Đang phun sương...' : 'Chạm để bật sương',
                       color: Colors.lightBlueAccent,
                       value: isMistOn,
-                      onChanged: (val) {
-                        FirebaseFirestore.instance
-                            .collection('pots')
-                            .doc(docId)
-                            .update({'mistStatus': val});
-                      },
+                      onChanged: (val) => FirebaseFirestore.instance.collection('pots').doc(docId).update({'mistStatus': val}),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text('DANGER ZONE', style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _handleUnpairDevice(context, docId),
+                        icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+                        label: const Text('Unpair Smart Pot', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.redAccent,
+                          elevation: 0,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                      ),
                     ),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 16),
-            const Text('GENERAL',
-                style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2)),
-            const SizedBox(height: 16),
-            _buildSettingsTile(
-                icon: Icons.notifications_outlined,
-                title: 'Notifications',
-                subtitle: 'On for all devices',
-                color: Colors.blueAccent,
-                onTap: () {}),
-            _buildSettingsTile(
-                icon: Icons.language,
-                title: 'Language',
-                subtitle: 'English',
-                color: Colors.orangeAccent,
-                onTap: () {}),
             const SizedBox(height: 32),
-            const Text('DEVICE',
-                style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2)),
+            const Text('GENERAL', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(height: 16),
+            _buildSwitchTile(
+              icon: Icons.notifications_active,
+              title: 'Notifications',
+              subtitle: isNotiEnabled ? 'Đã bật cảnh báo' : 'Đang tắt',
+              color: Colors.blueAccent,
+              value: isNotiEnabled,
+              onChanged: (val) {
+                ref.read(notificationProvider.notifier).setNoti(val);
+              },
+            ),
+            _buildSettingsTile(
+              icon: Icons.language,
+              title: 'Language',
+              subtitle: currentLanguage,
+              color: Colors.orangeAccent,
+              onTap: () => _showLanguagePicker(context, ref, currentLanguage),
+            ),
+            const SizedBox(height: 32),
+            const Text('DEVICE', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             _buildSettingsTile(
               icon: Icons.wifi,
@@ -208,119 +200,21 @@ class SettingsTab extends StatelessWidget {
               },
             ),
             const SizedBox(height: 32),
-            const Text('DANGER ZONE',
-                style: TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2)),
-            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      backgroundColor: const Color(0xFF161B22),
-                      title: const Text('Xóa thiết bị?', style: TextStyle(color: Colors.white)),
-                      content: const Text(
-                        'Hành động này sẽ ngắt kết nối chậu cây khỏi tài khoản của bạn. Thiết bị sẽ tự động khởi động lại và xóa cài đặt Wi-Fi.',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Xóa ngay', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (confirm == true) {
-                    try {
-                      await FirebaseFirestore.instance
-                          .collection('pots')
-                          .doc('pot_001')
-                          .update({
-                        'ownerId': '',
-                        'pumpStatus': false,
-                        'mistStatus': false,
-                      });
-
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã xóa thiết bị thành công!'),
-                            backgroundColor: Color(0xFF00C896),
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Lỗi khi xóa thiết bị!'),
-                            backgroundColor: Colors.redAccent,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-                icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
-                label: const Text('Unpair Smart Pot',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.redAccent)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.redAccent,
-                  elevation: 0,
-                  side: const BorderSide(color: Colors.redAccent),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  try {
-                    await FirebaseAuth.instance.signOut();
-                    if (context.mounted) {
-                      context.go('/welcome');
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Lỗi đăng xuất: $e')),
-                      );
-                    }
-                  }
+                  await FirebaseAuth.instance.signOut();
                 },
                 icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text('Log Out',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                label: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent.withOpacity(0.1),
                   foregroundColor: Colors.redAccent,
                   elevation: 0,
                   side: const BorderSide(color: Colors.redAccent),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ),
@@ -331,13 +225,111 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    VoidCallback? onTap,
-  }) {
+  void _showLanguagePicker(BuildContext context, WidgetRef ref, String currentLang) {
+    final languages = ['Tiếng Việt', 'English', '日本語'];
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF161B22),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Select Language', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            ...languages.map((lang) => ListTile(
+              title: Text(lang, style: TextStyle(color: currentLang == lang ? const Color(0xFF00C896) : Colors.white)),
+              trailing: currentLang == lang ? const Icon(Icons.check_circle, color: Color(0xFF00C896)) : null,
+              onTap: () {
+                ref.read(languageProvider.notifier).setLanguage(lang);
+                Navigator.pop(ctx);
+              },
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleUnpairDevice(BuildContext context, String docId) async {
+    final result = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF161B22),
+        title: const Text('Ngắt kết nối thiết bị', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text(
+          'Bạn muốn chỉ ngắt kết nối để cài lại Wi-Fi, hay muốn xóa sạch toàn bộ lịch sử dữ liệu của chậu cây này khỏi hệ thống?',
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 0), 
+            child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 1), 
+            child: const Text('Giữ Dữ Liệu', style: TextStyle(color: Colors.orangeAccent)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, 2), 
+            child: const Text('Xóa Sạch', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == 1) {
+      try {
+        await FirebaseFirestore.instance.collection('pots').doc(docId).update({
+          'ownerId': FieldValue.delete(),
+          'pumpStatus': false,
+          'mistStatus': false,
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã ngắt kết nối. Dữ liệu vẫn được lưu trữ!'), backgroundColor: Color(0xFF00C896)));
+        }
+      } catch (e) {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi khi ngắt kết nối!'), backgroundColor: Colors.redAccent));
+      }
+    } 
+    else if (result == 2) {
+      try {
+        showDialog(
+          context: context, 
+          barrierDismissible: false,
+          builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+        );
+
+        final potRef = FirebaseFirestore.instance.collection('pots').doc(docId);
+
+        final historyDocs = await potRef.collection('history').get();
+        for (var doc in historyDocs.docs) {
+          await doc.reference.delete();
+        }
+
+        final sensorDocs = await potRef.collection('sensor_history').get();
+        for (var doc in sensorDocs.docs) {
+          await doc.reference.delete();
+        }
+
+        await potRef.delete();
+
+        if (context.mounted) Navigator.pop(context); 
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã xóa vĩnh viễn thiết bị và toàn bộ dữ liệu!'), backgroundColor: Color(0xFF00C896)));
+        }
+      } catch (e) {
+        if (context.mounted) Navigator.pop(context);
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi khi xóa dữ liệu!'), backgroundColor: Colors.redAccent));
+      }
+    }
+  }
+
+  Widget _buildSettingsTile({required IconData icon, required String title, required String subtitle, required Color color, VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: InkWell(
@@ -352,28 +344,15 @@ class SettingsTab extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 24),
-              ),
+              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600)),
+                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            color: Colors.white54, fontSize: 13)),
+                    Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 13)),
                   ],
                 ),
               ),
@@ -385,14 +364,7 @@ class SettingsTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSwitchTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required bool value,
-    required Function(bool) onChanged,
-  }) {
+  Widget _buildSwitchTile({required IconData icon, required String title, required String subtitle, required Color color, required bool value, required Function(bool) onChanged}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Container(
@@ -400,49 +372,23 @@ class SettingsTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF161B22),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: value
-                  ? color.withOpacity(0.5)
-                  : Colors.white.withOpacity(0.05)),
+          border: Border.all(color: value ? color.withOpacity(0.5) : Colors.white.withOpacity(0.05)),
         ),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 24)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600)),
+                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: TextStyle(
-                          color: value ? color : Colors.white54,
-                          fontSize: 13,
-                          fontWeight:
-                              value ? FontWeight.bold : FontWeight.normal)),
+                  Text(subtitle, style: TextStyle(color: value ? color : Colors.white54, fontSize: 13, fontWeight: value ? FontWeight.bold : FontWeight.normal)),
                 ],
               ),
             ),
-            Switch(
-              value: value,
-              onChanged: onChanged,
-              activeColor: color,
-              activeTrackColor: color.withOpacity(0.3),
-              inactiveThumbColor: Colors.white54,
-              inactiveTrackColor: Colors.white12,
-            ),
+            Switch(value: value, onChanged: onChanged, activeColor: color, activeTrackColor: color.withOpacity(0.3), inactiveThumbColor: Colors.white54, inactiveTrackColor: Colors.white12),
           ],
         ),
       ),
