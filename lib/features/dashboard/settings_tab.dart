@@ -5,6 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
 import 'package:smart_pot/core/providers/locale_provider.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:smart_pot/core/utils/image_helper.dart';
 
 class LanguageNotifier extends Notifier<String> {
   @override
@@ -31,11 +36,41 @@ class SettingsTab extends ConsumerStatefulWidget {
   ConsumerState<SettingsTab> createState() => _SettingsTabState();
 }
 class _SettingsTabState extends ConsumerState<SettingsTab> {
-    User? user;
-    @override
-    void initState() {
-      super.initState();
-      user = FirebaseAuth.instance.currentUser;
+  Future<void> _updateAvatar() async {
+    final File? image = await ImageHelper.pickImageFromGallery();
+    
+    if (image == null) return;
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      
+      // Xóa Firebase Storage, gọi Cloudinary
+      final url = await ImageHelper.uploadToCloudinary(image);
+      
+      if (url != null) {
+        // Vẫn dùng mẹo đánh lừa Cache cũ để UI load ngay
+        final urlWithTimestamp = '$url?v=${DateTime.now().millisecondsSinceEpoch}';
+
+        await user!.updatePhotoURL(urlWithTimestamp);
+        await user.reload();
+        
+        setState(() { this.user = FirebaseAuth.instance.currentUser; });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã cập nhật ảnh đại diện!'), backgroundColor: Color(0xFF00C896)));
+        }
+      } else {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi khi tải ảnh lên!'), backgroundColor: Colors.redAccent));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.redAccent));
+    }
+  }
+  User? user;
+   @override
+   void initState() {
+     super.initState();
+     user = FirebaseAuth.instance.currentUser;
   }
 
   Widget build(BuildContext context) {
@@ -69,11 +104,30 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             const SizedBox(height: 32),
             Row(
               children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: const Color(0xFF00C896),
-                  backgroundImage: photoURL != null ? NetworkImage(photoURL) : null,
-                  child: photoURL == null ? const Icon(Icons.person, size: 40, color: Colors.black87) : null,
+                GestureDetector(
+                  onTap: _updateAvatar, 
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: photoURL != null 
+                            ? NetworkImage(photoURL) 
+                            : const AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF00C896),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -278,6 +332,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   setStateDialog(() => isLoading = true);
                   
                   try {
+                    Navigator.pop(ctx); // Close the dialog before updating
                     await FirebaseAuth.instance.currentUser?.updateDisplayName(newName);
                     await FirebaseAuth.instance.currentUser?.reload();
                     

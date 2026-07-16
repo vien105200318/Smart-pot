@@ -23,6 +23,9 @@ dependencies:
   intl: ^0.20.2
   http: ^1.6.0
   flutter_svg: ^2.3.0
+  image_picker: ^1.1.2
+  firebase_storage: ^13.4.5
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
