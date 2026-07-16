@@ -42,22 +42,32 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     if (image == null) return;
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      
-      // Xóa Firebase Storage, gọi Cloudinary
+      final currentUser = FirebaseAuth.instance.currentUser;
       final url = await ImageHelper.uploadToCloudinary(image);
       
-      if (url != null) {
-        // Vẫn dùng mẹo đánh lừa Cache cũ để UI load ngay
+      if (url != null && currentUser != null) {
         final urlWithTimestamp = '$url?v=${DateTime.now().millisecondsSinceEpoch}';
 
-        await user!.updatePhotoURL(urlWithTimestamp);
-        await user.reload();
+        // update profile photoURL
+        await currentUser.updatePhotoURL(urlWithTimestamp);
+        await currentUser.reload();
         
-        setState(() { this.user = FirebaseAuth.instance.currentUser; });
-        
+        // update old posts
+        final postsQuery = await FirebaseFirestore.instance
+            .collection('posts')
+            .where('uid', isEqualTo: currentUser.uid)
+            .get();
+            
+        if (postsQuery.docs.isNotEmpty) {
+          final batch = FirebaseFirestore.instance.batch();
+          for (var doc in postsQuery.docs) {
+            batch.update(doc.reference, {'avatar': urlWithTimestamp});
+          }
+          await batch.commit();
+        }
+
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã cập nhật ảnh đại diện!'), backgroundColor: Color(0xFF00C896)));
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Đã cập nhật ảnh đại diện mới!'), backgroundColor: Color(0xFF00C896)));
         }
       } else {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lỗi khi tải ảnh lên!'), backgroundColor: Colors.redAccent));
@@ -332,19 +342,31 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   setStateDialog(() => isLoading = true);
                   
                   try {
-                    Navigator.pop(ctx); // Close the dialog before updating
-                    await FirebaseAuth.instance.currentUser?.updateDisplayName(newName);
-                    await FirebaseAuth.instance.currentUser?.reload();
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    
+                    // update profile
+                    await currentUser?.updateDisplayName(newName);
+                    await currentUser?.reload();
+                    // old posts
+                    if (currentUser != null) {
+                      final postsQuery = await FirebaseFirestore.instance
+                          .collection('posts')
+                          .where('uid', isEqualTo: currentUser.uid)
+                          .get();
+                          
+                      if (postsQuery.docs.isNotEmpty) {
+                        final batch = FirebaseFirestore.instance.batch();
+                        for (var doc in postsQuery.docs) {
+                          batch.update(doc.reference, {'user': newName});
+                        }
+                        await batch.commit(); // change all
+                      }
+                    }
                     
                     if (mounted) {
-                      Navigator.pop(ctx);
-                      
-                      setState(() {
-                        user = FirebaseAuth.instance.currentUser; 
-                      });
-                      
+                      Navigator.pop(ctx); 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cập nhật tên thành công! 🌱'), backgroundColor: Color(0xFF00C896))
+                        const SnackBar(content: Text('Đã cập nhật tên của bạn 🌱'), backgroundColor: Color(0xFF00C896))
                       );
                     }
                   } catch (e) {
