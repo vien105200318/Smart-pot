@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/welcome_screen.dart';
 import '../../features/dashboard/home_screen.dart';
+import '../../features/dashboard/main_layout.dart';
+
 
 final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
@@ -40,7 +42,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/home',
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => const MainLayout(),
       )
     ]
   );
