@@ -6,6 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:smart_pot/features/community/create_post_bottom_sheet.dart'; 
 import 'package:smart_pot/core/utils/image_helper.dart';
+import 'package:smart_pot/features/community/story_viewer_screen.dart';
+import 'package:smart_pot/features/community/create_story_screen.dart';
 
 class CommunityTab extends StatelessWidget {
   const CommunityTab({super.key});
@@ -143,6 +145,8 @@ class CommunityTab extends StatelessWidget {
   }
   
   Widget _buildFeaturedStories() {
+    final twentyFourHoursAgo = DateTime.now().subtract(const Duration(hours: 24));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,6 +165,7 @@ class CommunityTab extends StatelessWidget {
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('stories')
+                .where('timestamp', isGreaterThan: Timestamp.fromDate(twentyFourHoursAgo))
                 .orderBy('timestamp', descending: true)
                 .snapshots(),
             builder: (context, snapshot) {
@@ -170,19 +175,55 @@ class CommunityTab extends StatelessWidget {
 
               final docs = snapshot.data?.docs ?? [];
 
+              final Map<String, List<QueryDocumentSnapshot>> groupedStories = {};
+              for (var doc in docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final String uid = data['uid'] ?? 'unknown';
+                if (!groupedStories.containsKey(uid)) {
+                  groupedStories[uid] = [];
+                }
+                groupedStories[uid]!.add(doc);
+              }
+
+              final userIds = groupedStories.keys.toList();
+
               return ListView.builder(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: docs.length + 1,
+                itemCount: userIds.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) return _buildAddStoryButton(context);
 
-                  final data = docs[index - 1].data() as Map<String, dynamic>;
-                  final String avatar = data['avatar'] ?? data['img'] ?? '';
-                  final String user = data['user'] ?? 'User';
+                  final String uid = userIds[index - 1];
+                  final List<QueryDocumentSnapshot> userStories = groupedStories[uid]!;
+                  
+                  userStories.sort((a, b) {
+                    final tA = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+                    final tB = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+                    if (tA == null || tB == null) return 0;
+                    return tA.compareTo(tB);
+                  });
 
-                  return StoryBubble(avatarUrl: avatar, username: user);
+                  final latestStoryData = userStories.last.data() as Map<String, dynamic>;
+                  final String avatar = latestStoryData['avatar'] ?? latestStoryData['img'] ?? '';
+                  final String user = latestStoryData['user'] ?? 'User';
+
+                  return StoryBubble(
+                    avatarUrl: avatar, 
+                    username: user,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => StoryViewerScreen(
+                            stories: userStories,
+                            initialIndex: 0,
+                          ),
+                        ),
+                      );
+                    },
+                  );
                 },
               );
             },
@@ -375,50 +416,16 @@ class CommunityTab extends StatelessWidget {
       return;
     }
 
-    try {
-      final File? image = await ImageHelper.pickImageFromGallery();
-      if (image == null) return;
+    final File? image = await ImageHelper.pickImageFromGallery();
+    if (image == null) return;
 
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-        );
-      }
-
-      final url = await ImageHelper.uploadToCloudinary(image);
-      
-      if (context.mounted) Navigator.pop(context); 
-
-      if (url != null) {
-        await FirebaseFirestore.instance.collection('stories').add({
-          'uid': currentUser.uid,
-          'user': currentUser.displayName ?? 'Người dùng Smart Pot',
-          'avatar': currentUser.photoURL ?? '',
-          'img': url,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã đăng Story mới thành công! 🌱'), backgroundColor: Color(0xFF00C896)),
-          );
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Lỗi tải ảnh lên server!'), backgroundColor: Colors.redAccent),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), backgroundColor: Colors.redAccent),
-        );
-      }
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CreateStoryScreen(imageFile: image),
+        ),
+      );
     }
   }
 
@@ -459,34 +466,43 @@ class CommunityTab extends StatelessWidget {
 class StoryBubble extends StatelessWidget {
   final String avatarUrl;
   final String username;
+  final VoidCallback? onTap;
 
-  const StoryBubble({super.key, required this.avatarUrl, required this.username});
+  const StoryBubble({
+    super.key, 
+    required this.avatarUrl, 
+    required this.username,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle, 
-              gradient: LinearGradient(colors: [Color(0xFF00C896), Colors.blueAccent])
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle, 
+                gradient: LinearGradient(colors: [Color(0xFF00C896), Colors.blueAccent])
+              ),
+              child: CircleAvatar(
+                radius: 28, 
+                backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
+              ),
             ),
-            child: CircleAvatar(
-              radius: 28, 
-              backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-              child: avatarUrl.isEmpty ? const Icon(Icons.person, color: Colors.white) : null,
+            const SizedBox(height: 8),
+            Text(
+              username.split(' ').first, 
+              style: const TextStyle(color: Colors.white, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            username.split(' ').first, 
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
