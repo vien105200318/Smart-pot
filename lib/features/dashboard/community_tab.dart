@@ -8,6 +8,7 @@ import 'package:smart_pot/features/community/create_post_bottom_sheet.dart';
 import 'package:smart_pot/core/utils/image_helper.dart';
 import 'package:smart_pot/features/community/story_viewer_screen.dart';
 import 'package:smart_pot/features/community/create_story_screen.dart';
+import 'package:smart_pot/features/community/post_comments_bottom_sheet.dart';
 
 class CommunityTab extends StatelessWidget {
   const CommunityTab({super.key});
@@ -245,6 +246,8 @@ class CommunityTab extends StatelessWidget {
     final bool isLikedByMe = likesArray.contains(currentUid);
     final int comments = post['comments'] ?? 0;
 
+    final double vibeScore = (9.0 + (likesCount * 0.1) + (comments * 0.15)).clamp(9.0, 10.0);
+
     String locationOrTime = 'Vừa xong';
     if (post['timestamp'] != null) {
       final DateTime time = (post['timestamp'] as Timestamp).toDate();
@@ -316,7 +319,7 @@ class CommunityTab extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: const Color(0xFF00C896).withOpacity(0.5)),
                       ),
-                      child: const Text('VIBE: 9.8', style: TextStyle(color: Color(0xFF00C896), fontWeight: FontWeight.bold, fontSize: 12)),
+                      child: Text('VIBE: ${vibeScore.toStringAsFixed(1)}', style: const TextStyle(color: Color(0xFF00C896), fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                     if (postUid == currentUid) ...[
                       const SizedBox(width: 8),
@@ -358,7 +361,14 @@ class CommunityTab extends StatelessWidget {
                       icon: Icons.chat_bubble_outline, 
                       text: '$comments', 
                       color: Colors.white70,
-                      onTap: () {},
+                      onTap: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => PostCommentsBottomSheet(postId: docId),
+                        );
+                      },
                     ),
                   ],
                 )
