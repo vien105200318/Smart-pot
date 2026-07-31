@@ -381,6 +381,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Posting...'**
   String get posting;
+
+  /// No description provided for @waterQuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Water your plant'**
+  String get waterQuestTitle;
+
+  /// No description provided for @waterQuestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on the water pump at least once'**
+  String get waterQuestDesc;
+
+  /// No description provided for @waterStreakQuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep watering'**
+  String get waterStreakQuestTitle;
+
+  /// No description provided for @waterStreakQuestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Water your plant 3 times today'**
+  String get waterStreakQuestDesc;
+
+  /// No description provided for @dailyLoginQuestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily login'**
+  String get dailyLoginQuestTitle;
+
+  /// No description provided for @dailyLoginQuestDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete today\'s daily login'**
+  String get dailyLoginQuestDesc;
 }
 
 class _AppLocalizationsDelegate

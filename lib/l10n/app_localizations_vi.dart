@@ -150,4 +150,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get posting => 'Đang đăng...';
+
+  @override
+  String get waterQuestTitle => 'Tưới cây hôm nay';
+
+  @override
+  String get waterQuestDesc => 'Bật máy bơm ít nhất 1 lần';
+
+  @override
+  String get waterStreakQuestTitle => 'Chăm sóc liên tục';
+
+  @override
+  String get waterStreakQuestDesc => 'Tưới cây 3 lần hôm nay';
+
+  @override
+  String get dailyLoginQuestTitle => 'Đăng nhập mỗi ngày';
+
+  @override
+  String get dailyLoginQuestDesc => 'Hoàn thành daily login';
 }

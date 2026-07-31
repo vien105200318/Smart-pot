@@ -48,7 +48,7 @@ class GreenCoinModel {
 
   GreenCoinModel copyWith({
     int? balance,
-    int? totalEarnd,
+    int? totalEarned,
     DateTime? lastDailyLogin,
     int? streakDays,
   }) {

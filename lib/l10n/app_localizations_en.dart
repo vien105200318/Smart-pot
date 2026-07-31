@@ -150,4 +150,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get posting => 'Posting...';
+
+  @override
+  String get waterQuestTitle => 'Water your plant';
+
+  @override
+  String get waterQuestDesc => 'Turn on the water pump at least once';
+
+  @override
+  String get waterStreakQuestTitle => 'Keep watering';
+
+  @override
+  String get waterStreakQuestDesc => 'Water your plant 3 times today';
+
+  @override
+  String get dailyLoginQuestTitle => 'Daily login';
+
+  @override
+  String get dailyLoginQuestDesc => 'Complete today\'s daily login';
 }

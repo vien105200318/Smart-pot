@@ -46,5 +46,11 @@
   "createPost": "Tạo bài viết",
   "whatsOnYourMind": "Chậu cây của bạn hôm nay thế nào?",
   "postBtn": "Đăng",
-  "posting": "Đang đăng..."
+  "posting": "Đang đăng...",
+  "waterQuestTitle": "Tưới cây hôm nay",
+  "waterQuestDesc": "Bật máy bơm ít nhất 1 lần",
+  "waterStreakQuestTitle": "Chăm sóc liên tục",
+  "waterStreakQuestDesc": "Tưới cây 3 lần hôm nay",
+  "dailyLoginQuestTitle": "Đăng nhập mỗi ngày",
+  "dailyLoginQuestDesc": "Hoàn thành daily login"
 }

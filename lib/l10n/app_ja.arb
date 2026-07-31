@@ -46,5 +46,11 @@
   "createPost": "投稿を作成",
   "whatsOnYourMind": "植物について何を考えていますか？",
   "postBtn": "投稿",
-  "posting": "投稿中..."
+  "posting": "投稿中...",
+  "waterQuestTitle": "植物に水やりをする",
+  "waterQuestDesc": "水ポンプを少なくとも1回作動させます",
+  "waterStreakQuestTitle": "水やりを続ける",
+  "waterStreakQuestDesc": "今日は植物に3回水やりをします",
+  "dailyLoginQuestTitle": "毎日のログイン",
+  "dailyLoginQuestDesc": "今日のデイリーログインを完了します"
 }

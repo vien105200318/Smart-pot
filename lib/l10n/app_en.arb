@@ -53,5 +53,11 @@
   "createPost": "Create Post",
   "whatsOnYourMind": "What's on your mind about your plants?",
   "postBtn": "Post",
-  "posting": "Posting..."
+  "posting": "Posting...",
+  "waterQuestTitle": "Water your plant",
+  "waterQuestDesc": "Turn on the water pump at least once",
+  "waterStreakQuestTitle": "Keep watering",
+  "waterStreakQuestDesc": "Water your plant 3 times today",
+  "dailyLoginQuestTitle": "Daily login",
+  "dailyLoginQuestDesc": "Complete today's daily login"
 }

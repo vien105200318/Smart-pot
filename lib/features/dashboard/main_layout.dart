@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'home_screen.dart';
-import 'devices_tab.dart';
 import 'community_tab.dart';
 import 'history_tab.dart';
 import 'settings_tab.dart';
+import '../wallet/screens/pot_garden_screen.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -22,7 +22,7 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
 
   final List<Widget> _screens = [
     const HomeScreen(),     
-    const DevicesTab(),     
+    const PotGardenScreen(),     
     const CommunityTab(),   
     const HistoryTab(),     
     const SettingsTab(),    
@@ -155,7 +155,7 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
                   Row(
                     children: [
                       _buildNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', index: 0),
-                      _buildNavItem(icon: Icons.sensors_outlined, activeIcon: Icons.sensors, label: 'Devices', index: 1),
+                      _buildNavItem(icon: Icons.yard_outlined, activeIcon: Icons.yard, label: 'Vườn', index: 1),
                     ],
                   ),
                   Row(
@@ -170,7 +170,6 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
           ),
         ),
 
-        // LỚP 2: MÀNG XANH CHUYỂN CẢNH (Chỉ bung ra khi bấm chuyển sang GreenVibe hoặc thoát ra)
         if (_isTransitioning)
           Align(
             alignment: Alignment.bottomCenter,

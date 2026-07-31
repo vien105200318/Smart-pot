@@ -150,4 +150,22 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get posting => '投稿中...';
+
+  @override
+  String get waterQuestTitle => '植物に水やりをする';
+
+  @override
+  String get waterQuestDesc => '水ポンプを少なくとも1回作動させます';
+
+  @override
+  String get waterStreakQuestTitle => '水やりを続ける';
+
+  @override
+  String get waterStreakQuestDesc => '今日は植物に3回水やりをします';
+
+  @override
+  String get dailyLoginQuestTitle => '毎日のログイン';
+
+  @override
+  String get dailyLoginQuestDesc => '今日のデイリーログインを完了します';
 }
