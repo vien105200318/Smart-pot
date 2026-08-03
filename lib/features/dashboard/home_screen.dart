@@ -113,7 +113,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   try {
-                                    await ref.read(sensorRepositoryProvider).triggerWaterPump(!isWatering);
+                                    await ref.read(sensorRepositoryProvider).triggerWaterPump(sensorData['docId'] ?? '', !isWatering);
                                   } catch (e) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent));
@@ -143,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: () async {
                                   try {
-                                    await ref.read(sensorRepositoryProvider).triggerMister(!isMisting);
+                                    await ref.read(sensorRepositoryProvider).triggerMister(sensorData['docId'] ?? '', !isMisting);
                                   } catch (e) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent));

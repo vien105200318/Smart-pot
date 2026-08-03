@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../dashboard/device/wifi_setup_bottom_sheet.dart';
+import '../../dashboard/repositories/pots_repository.dart';
 import '../constants/wallet_constants.dart';
-import '../services/slot_service.dart';
 import '../widgets/unlock_slot_dialog.dart';
 import '../widgets/wallet_bottom_sheet.dart';
 
-class PotGardenScreen extends ConsumerWidget {
+class PotGardenScreen extends ConsumerStatefulWidget {
   const PotGardenScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final slots = ref.watch(unlockedSlotStreamProvider);
+  ConsumerState<PotGardenScreen> createState() => _PotGardenScreenState();
+}
+
+class _PotGardenScreenState extends ConsumerState<PotGardenScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Gán slotIndex cho thiết bị CŨ (chưa có field) — chạy 1 lần khi vào tab
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(potsRepositoryProvider).claimFreeSlots();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final slotStatuses = ref.watch(slotStatusProvider);
+    final activeIndex = ref.watch(activeSlotIndexProvider);
 
     return SafeArea(
       child: Padding(
@@ -37,39 +53,35 @@ class PotGardenScreen extends ConsumerWidget {
                     child: const Icon(Icons.account_balance_wallet, color: Color(0xFF00C896), size: 20),
                   ),
                 ),
-                slots.when(
-                  loading: () => const Text('...', style: TextStyle(color: Colors.white54)),
-                  error: (e, _) => const SizedBox.shrink(),
-                  data: (unlocked) => Text(
-                    '${unlocked.length} / ${WalletConstants.maxSlots}',
-                    style: const TextStyle(color: Colors.white54, fontSize: 14),
-                  ),
+                Text(
+                  '${slotStatuses.where((s) => s.state != SlotState.locked).length} / ${WalletConstants.maxSlots}',
+                  style: const TextStyle(color: Colors.white54, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             const Text(
-              'Mở khóa ô chậu để trồng thêm cây',
+              'Chạm ô trống để kết nối ESP · Chạm ô có cây để xem',
               style: TextStyle(color: Colors.white54, fontSize: 16),
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: slots.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-                error: (e, _) => Center(child: Text('Lỗi: $e', style: const TextStyle(color: Colors.redAccent))),
-                data: (unlocked) => GridView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.9,
-                  ),
-                  itemCount: WalletConstants.maxSlots,
-                  itemBuilder: (context, index) {
-                    return _SlotCell(index: index, unlocked: unlocked.contains(index));
-                  },
+              child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.9,
                 ),
+                itemCount: WalletConstants.maxSlots,
+                itemBuilder: (context, index) {
+                  return _SlotCell(
+                    index: index,
+                    info: slotStatuses[index],
+                    isActive: activeIndex == index,
+                  );
+                },
               ),
             ),
           ],
@@ -81,46 +93,130 @@ class PotGardenScreen extends ConsumerWidget {
 
 class _SlotCell extends ConsumerWidget {
   final int index;
-  final bool unlocked;
-  const _SlotCell({required this.index, required this.unlocked});
+  final SlotInfo info;
+  final bool isActive;
+
+  const _SlotCell({
+    required this.index,
+    required this.info,
+    required this.isActive,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    switch (info.state) {
+      case SlotState.locked:
+        return _buildLocked(context, ref);
+      case SlotState.empty:
+        return _buildEmpty(context, ref);
+      case SlotState.connected:
+        return _buildConnected(context, ref);
+    }
+  }
+
+  Widget _buildLocked(BuildContext context, WidgetRef ref) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: unlocked
-          ? null
-          : () {
-              showDialog<bool>(
-                context: context,
-                builder: (context) => UnlockSlotDialog(slotIndex: index),
-              );
-            },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
+      onTap: () {
+        showDialog<bool>(
+          context: context,
+          builder: (context) => UnlockSlotDialog(slotIndex: index),
+        );
+      },
+      child: Container(
         decoration: BoxDecoration(
-          color: unlocked ? const Color(0xFF00C896).withOpacity(0.12) : const Color(0xFF161B22),
+          color: const Color(0xFF161B22),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lock_outline, color: Colors.white38, size: 30),
+            const SizedBox(height: 8),
+            Text('${WalletConstants.slotCost}',
+                style: const TextStyle(color: Colors.orangeAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 2),
+            Text('Ô ${index + 1}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty(BuildContext context, WidgetRef ref) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => const WifiSetupBottomSheet(),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF00C896).withOpacity(0.08),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: unlocked ? const Color(0xFF00C896).withOpacity(0.6) : Colors.white.withOpacity(0.08),
+            color: const Color(0xFF00C896).withOpacity(0.4),
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (unlocked) ...[
-              const Icon(Icons.local_florist, color: Color(0xFF00C896), size: 36),
-              const SizedBox(height: 8),
-              Text('Ô ${index + 1}',
-                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-            ] else ...[
-              const Icon(Icons.lock_outline, color: Colors.white38, size: 30),
-              const SizedBox(height: 8),
-              Text('${WalletConstants.slotCost}',
-                  style: const TextStyle(color: Colors.orangeAccent, fontSize: 13, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 2),
-              Text('Ô ${index + 1}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
-            ],
+            const Icon(Icons.add_circle_outline, color: Color(0xFF00C896), size: 32),
+            const SizedBox(height: 8),
+            Text('Ô ${index + 1}',
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 2),
+            const Text('Kết nối ESP',
+                style: TextStyle(color: Color(0xFF00C896), fontSize: 11, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildConnected(BuildContext context, WidgetRef ref) {
+    final online = info.pot?.isOnline ?? false;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        ref.read(activeSlotIndexProvider.notifier).setActive(index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF00C896).withOpacity(0.2)
+              : const Color(0xFF00C896).withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF00C896)
+                : const Color(0xFF00C896).withOpacity(0.6),
+            width: isActive ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.local_florist,
+                color: online ? const Color(0xFF00C896) : Colors.white38, size: 36),
+            const SizedBox(height: 8),
+            Text('Ô ${index + 1}',
+                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text(
+              isActive ? 'Đang xem' : (online ? 'Online' : 'Offline'),
+              style: TextStyle(
+                color: isActive ? const Color(0xFF00C896) : Colors.white54,
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
           ],
         ),
       ),

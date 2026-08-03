@@ -10,6 +10,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_pot/core/utils/image_helper.dart';
+import 'package:smart_pot/features/dashboard/repositories/pots_repository.dart';
+
 
 class LanguageNotifier extends Notifier<String> {
   @override
@@ -85,7 +87,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final currentUid = user?.uid ?? '';
     final displayName = user?.displayName ?? 'Người dùng Smart Pot';
     final email = user?.email ?? 'Chưa cập nhật email';
     final photoURL = user?.photoURL;
@@ -93,7 +94,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     final lang = AppLocalizations.of(context)!;
     final currentLanguage = ref.watch(languageProvider);
     final isNotiEnabled = ref.watch(notificationProvider);
+    final potsAsync = ref.watch(potsStreamProvider);
+    final activeIndex = ref.watch(activeSlotIndexProvider);
     
+        
     String getLanguageName(Locale loc){
     if (loc.languageCode == 'vi') return 'Tiếng Việt';
       if (loc.languageCode == 'ja') return '日本語';
@@ -164,18 +168,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             const Text('DEVICE CONTROL',
                 style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('pots')
-                  .where('ownerId', isEqualTo: currentUid)
-                  .limit(1)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) return const Text('Lỗi tải dữ liệu', style: TextStyle(color: Colors.red));
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFF00C896)));
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        potsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
+              error: (e, _) => const Text('Lỗi tải dữ liệu', style: TextStyle(color: Colors.red)),
+              data: (pots) {
+                if (pots.isEmpty) {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -197,30 +194,63 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   );
                 }
 
-                final deviceDoc = snapshot.data!.docs.first;
-                final data = deviceDoc.data() as Map<String, dynamic>;
-                final String docId = deviceDoc.id;
-
-                bool isPumpOn = data['pumpStatus'] ?? false;
-                bool isMistOn = data['mistStatus'] ?? false;
+                PotModel activePot = pots.first;
+                for (final p in pots) {
+                  if (p.slotIndex == activeIndex) {
+                    activePot = p;
+                    break;
+                  }
+                }
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (pots.length > 1) ...[
+                      SizedBox(
+                        height: 40,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: pots.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 8),
+                          itemBuilder: (context, i) {
+                            final pot = pots[i];
+                            final isActive = pot.slotIndex == activeIndex;
+                            return ChoiceChip(
+                              avatar: Icon(Icons.circle, size: 10,
+                                  color: pot.isOnline ? const Color(0xFF00C896) : Colors.white38),
+                              label: Text('Ô ${(pot.slotIndex ?? 0) + 1}',
+                                  style: TextStyle(
+                                      color: isActive ? Colors.black : Colors.white,
+                                      fontWeight: FontWeight.bold)),
+                              selected: isActive,
+                              backgroundColor: const Color(0xFF0D1117),
+                              selectedColor: const Color(0xFF00C896),
+                              side: BorderSide(color: isActive ? const Color(0xFF00C896) : Colors.white24),
+                              onSelected: (_) =>
+                                  ref.read(activeSlotIndexProvider.notifier).setActive(pot.slotIndex ?? 0),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     _buildSwitchTile(
                       icon: Icons.water_drop,
                       title: 'Water Pump',
-                      subtitle: isPumpOn ? 'Đang bơm nước...' : 'Chạm để bơm thủ công',
+                      subtitle: activePot.pumpStatus ? 'Đang bơm nước...' : 'Chạm để bơm thủ công',
                       color: const Color(0xFF00C896),
-                      value: isPumpOn,
-                      onChanged: (val) => FirebaseFirestore.instance.collection('pots').doc(docId).update({'pumpStatus': val}),
+                      value: activePot.pumpStatus,
+                      onChanged: (val) => FirebaseFirestore.instance
+                          .collection('pots').doc(activePot.docId).update({'pumpStatus': val}),
                     ),
                     _buildSwitchTile(
                       icon: Icons.cloudy_snowing,
                       title: 'Mist System',
-                      subtitle: isMistOn ? 'Đang phun sương...' : 'Chạm để bật sương',
+                      subtitle: activePot.mistStatus ? 'Đang phun sương...' : 'Chạm để bật sương',
                       color: Colors.lightBlueAccent,
-                      value: isMistOn,
-                      onChanged: (val) => FirebaseFirestore.instance.collection('pots').doc(docId).update({'mistStatus': val}),
+                      value: activePot.mistStatus,
+                      onChanged: (val) => FirebaseFirestore.instance
+                          .collection('pots').doc(activePot.docId).update({'mistStatus': val}),
                     ),
                     const SizedBox(height: 32),
                     const Text('DANGER ZONE', style: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
@@ -229,7 +259,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton.icon(
-                        onPressed: () => _handleUnpairDevice(context, docId),
+                        onPressed: () => _handleUnpairDevice(context, activePot.docId),
                         icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
                         label: const Text('Unpair Smart Pot', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
                         style: ElevatedButton.styleFrom(

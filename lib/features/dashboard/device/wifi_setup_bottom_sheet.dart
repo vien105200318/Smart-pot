@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../repositories/pots_repository.dart';
 
-class WifiSetupBottomSheet extends StatefulWidget {
+class WifiSetupBottomSheet extends ConsumerStatefulWidget {
   const WifiSetupBottomSheet({super.key});
 
   @override
-  State<WifiSetupBottomSheet> createState() => _WifiSetupBottomSheetState();
+  ConsumerState<WifiSetupBottomSheet> createState() =>
+      _WifiSetupBottomSheetState();
 }
 
-class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
+class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
   bool _isLoading = false;
   bool _isSaving = false;
   List<dynamic> _networks = [];
@@ -67,6 +70,21 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
       return;
     }
 
+    // ==== MỚI: kiểm tra còn ô trống không ====
+    final freeSlots =
+        await ref.read(potsRepositoryProvider).getFreeSlots();
+    if (freeSlots.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bạn đã dùng hết ô chậu khả dụng! Vào tab "Vườn" để mở khóa thêm ô (200 greenCoins/ô).'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final response = await http.post(
@@ -76,6 +94,7 @@ class _WifiSetupBottomSheetState extends State<WifiSetupBottomSheet> {
           'ssid': _selectedSSID,
           'password': _passController.text.trim(),
           'userId': user.uid,
+          'slotIndex': freeSlots.first, // ==== MỚI ====
         }),
       ).timeout(const Duration(seconds: 10));
 
