@@ -27,7 +27,15 @@ class PotGardenScreen extends ConsumerWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => showWalletBottomSheet(context),
-                  icon: const Icon(Icons.paid, color: Color(0xFF00C896)),
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF00C896).withOpacity(0.15),
+                      border: Border.all(color: const Color(0xFF00C896).withOpacity(0.4)),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet, color: Color(0xFF00C896), size: 20),
+                  ),
                 ),
                 slots.when(
                   loading: () => const Text('...', style: TextStyle(color: Colors.white54)),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../repositories/quest_repository.dart';
 import '../repositories/wallet_repository.dart';
 import '../services/social_service.dart';
@@ -56,8 +57,26 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Ví greenCoins',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white10,
+                          border: Border.all(color: Colors.white24, width: 1.5),
+                        ),
+                        child: SvgPicture.asset(
+                          'assets/images/Green-coin.svg',
+                          width: 28,
+                          height: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Ví greenCoins',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
+                  ),
                   const SizedBox(height: 20),
                   const WalletCard(),
                   const SizedBox(height: 20),

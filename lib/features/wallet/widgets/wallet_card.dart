@@ -32,8 +32,6 @@ class WalletCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.paid, color: Colors.black87, size: 22),
-              const SizedBox(width: 8),
               Text('greenCoins',
                   style: TextStyle(color: Colors.black87.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600)),
             ],

@@ -65,16 +65,24 @@ class UnlockSlotDialog extends ConsumerWidget {
 
   Future<void> _handleUnlock(BuildContext context, WidgetRef ref) async {
     final slotService = ref.read(slotServiceProvider);
-    final success = await slotService.unlockSlot(slotIndex);
-
-    if (context.mounted) {
-      Navigator.pop(context, success);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'Đã mở khóa ô chậu!' : 'Không đủ greenCoins!'),
-          backgroundColor: success ? const Color(0xFF00C896) : Colors.redAccent,
-        ),
-      );
+    try {
+      final success = await slotService.unlockSlot(slotIndex);
+      if (context.mounted) {
+        Navigator.pop(context, success);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success ? 'Đã mở khóa ô chậu!' : 'Không đủ greenCoins!'),
+            backgroundColor: success ? const Color(0xFF00C896) : Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context, false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi mở khóa: $e'), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
 }
