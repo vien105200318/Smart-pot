@@ -20,18 +20,9 @@ jobs:
       - name: 📦 Install dependencies
         run: flutter pub get
 
-      - name: 📝 Ensure Podfile has iOS platform
-        run: |
-          if [ ! -f ios/Podfile ]; then
-            echo "::error::ios/Podfile is missing. Commit ios/Podfile to the repo."
-            exit 1
-          fi
-          if ! grep -q "^platform :ios" ios/Podfile; then
-            echo "::error::ios/Podfile is missing 'platform :ios'. Add 'platform :ios, '15.0'' at the top."
-            exit 1
-          fi
-          echo "Podfile OK:"
-          grep "^platform :ios" ios/Podfile
+      # All plugins are Swift Packages (SPM) - no CocoaPods/Podfile needed.
+      # Do NOT commit ios/Podfile: it triggers a CocoaPods+SPM hybrid that
+      # fails with "sandbox is not in sync with the Podfile.lock".
 
       - name: 🆙 Update iOS Deployment Target
         run: |
