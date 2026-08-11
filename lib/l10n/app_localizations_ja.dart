@@ -168,4 +168,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get dailyLoginQuestDesc => '今日のデイリーログインを完了します';
+
+  @override
+  String get walletTitle => 'greenCoinsウォレット';
+
+  @override
+  String get walletBalance => '残高';
+
+  @override
+  String get walletTotalEarned => '総獲得';
+
+  @override
+  String get walletStreak => '連続';
+
+  @override
+  String get dailyLoginTitle => '毎日ログイン';
+
+  @override
+  String get dailyLoginClaimed => '今日は受け取り済み';
+
+  @override
+  String get dailyLoginClaim => '受け取る';
+
+  @override
+  String get questsTitle => 'クエスト';
+
+  @override
+  String get questReady => '受取可能';
+
+  @override
+  String get questClaim => '受け取る';
+
+  @override
+  String get earnMoreTitle => 'コインをもっと稼ぐ';
 }

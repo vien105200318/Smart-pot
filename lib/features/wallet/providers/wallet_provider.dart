@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../models/quest_model.dart';
 import '../repositories/wallet_repository.dart';
+import '../services/quest_service.dart';
 
 // selector balance
 final walletBalanceProvider = Provider<int>((ref) {
@@ -46,6 +48,9 @@ final dailyLoginClaimProvider = FutureProvider<void>((ref) async {
 
   await repository.addCoins(reward, reason: 'daily_login');
   await repository.updateDailyLogin(loginDate: now, newStreak: newStreak);
+
+  // Hook quest dailyLogin
+  await ref.read(questServiceProvider).incrementProgress(QuestType.dailyLogin);
 });
 
 // Logic  streak

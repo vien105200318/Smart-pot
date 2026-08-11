@@ -168,4 +168,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dailyLoginQuestDesc => 'Complete today\'s daily login';
+
+  @override
+  String get walletTitle => 'greenCoins Wallet';
+
+  @override
+  String get walletBalance => 'Balance';
+
+  @override
+  String get walletTotalEarned => 'Total Earned';
+
+  @override
+  String get walletStreak => 'Streak';
+
+  @override
+  String get dailyLoginTitle => 'Daily Login';
+
+  @override
+  String get dailyLoginClaimed => 'Claimed Today';
+
+  @override
+  String get dailyLoginClaim => 'Claim';
+
+  @override
+  String get questsTitle => 'Quests';
+
+  @override
+  String get questReady => 'READY';
+
+  @override
+  String get questClaim => 'CLAIM';
+
+  @override
+  String get earnMoreTitle => 'Earn More Coins';
 }

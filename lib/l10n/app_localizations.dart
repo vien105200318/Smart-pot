@@ -417,6 +417,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete today\'s daily login'**
   String get dailyLoginQuestDesc;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'greenCoins Wallet'**
+  String get walletTitle;
+
+  /// No description provided for @walletBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get walletBalance;
+
+  /// No description provided for @walletTotalEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Earned'**
+  String get walletTotalEarned;
+
+  /// No description provided for @walletStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get walletStreak;
+
+  /// No description provided for @dailyLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Login'**
+  String get dailyLoginTitle;
+
+  /// No description provided for @dailyLoginClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Claimed Today'**
+  String get dailyLoginClaimed;
+
+  /// No description provided for @dailyLoginClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim'**
+  String get dailyLoginClaim;
+
+  /// No description provided for @questsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quests'**
+  String get questsTitle;
+
+  /// No description provided for @questReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get questReady;
+
+  /// No description provided for @questClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim'**
+  String get questClaim;
+
+  /// No description provided for @earnMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn More Coins'**
+  String get earnMoreTitle;
 }
 
 class _AppLocalizationsDelegate

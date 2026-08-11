@@ -168,4 +168,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get dailyLoginQuestDesc => 'Hoàn thành daily login';
+
+  @override
+  String get walletTitle => 'Ví greenCoins';
+
+  @override
+  String get walletBalance => 'Số dư';
+
+  @override
+  String get walletTotalEarned => 'Đã kiếm';
+
+  @override
+  String get walletStreak => 'Streak';
+
+  @override
+  String get dailyLoginTitle => 'Điểm danh hằng ngày';
+
+  @override
+  String get dailyLoginClaimed => 'Đã nhận hôm nay';
+
+  @override
+  String get dailyLoginClaim => 'Nhận';
+
+  @override
+  String get questsTitle => 'Nhiệm vụ';
+
+  @override
+  String get questReady => 'SẴN SÀNG';
+
+  @override
+  String get questClaim => 'NHẬN';
+
+  @override
+  String get earnMoreTitle => 'Kiếm thêm coins';
 }

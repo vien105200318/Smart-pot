@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/green_coin_model.dart';
 
@@ -11,6 +12,11 @@ final walletStreamProvider = StreamProvider<GreenCoinModel>((ref) async* {
   final repository = ref.watch(walletRepositoryProvider);
   await repository.ensureWalletDoc();
   yield* repository.getWalletStream();
+});
+
+final transactionStreamProvider = StreamProvider<List<QueryDocumentSnapshot>>((ref) {
+  final repository = ref.watch(walletRepositoryProvider);
+  return repository.getTransactionsStream();
 });
 
 
@@ -96,6 +102,7 @@ Future<void> addCoins(int amount, {String reason = 'unknown'}) async {
       'balance': FieldValue.increment(amount),
       'totalEarned': FieldValue.increment(amount),
     }, SetOptions(merge: true));
+    await _logTransaction(amount: amount, type: 'earn', reason: reason);
   }
 // - coins
 
@@ -109,7 +116,39 @@ Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
     await _walletDoc.update({
       'balance': FieldValue.increment(-amount),
     });
+    await _logTransaction(amount: -amount, type: 'spend', reason: reason);
     return true;
+  }
+
+  // log giao dịch
+  Future<void> _logTransaction({
+    required int amount,
+    required String type,
+    required String reason,
+  }) async {
+    if (_userId == null) return;
+    try {
+      await _walletDoc.collection('transactions').add({
+        'amount': amount,
+        'type': type,
+        'reason': reason,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      // Không làm hỏng luồng add/spend coins nếu rules chưa cho phép sub-collection
+      debugPrint('Log transaction lỗi: $e');
+    }
+  }
+
+  // stream lịch sử giao dịch
+  Stream<List<QueryDocumentSnapshot>> getTransactionsStream() {
+    if (_userId == null) return Stream.value([]);
+    return _walletDoc
+        .collection('transactions')
+        .orderBy('createdAt', descending: true)
+        .limit(30)
+        .snapshots()
+        .map((snapshot) => snapshot.docs);
   }
 
   //daily login update 

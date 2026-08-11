@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/features/dashboard/widgets/metric_card.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart'; 
 import 'package:smart_pot/l10n/app_localizations.dart';
+import 'package:smart_pot/models/quest_model.dart';
+import 'package:smart_pot/features/wallet/services/quest_service.dart';
 
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -114,6 +116,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 onPressed: () async {
                                   try {
                                     await ref.read(sensorRepositoryProvider).triggerWaterPump(sensorData['docId'] ?? '', !isWatering);
+                                    // Hook quest: chỉ đếm khi BẬT máy bơm
+                                    if (!isWatering) {
+                                      await ref.read(questServiceProvider).incrementProgress(QuestType.waterPlant);
+                                    }
                                   } catch (e) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi đồng bộ: $e'), backgroundColor: Colors.redAccent));

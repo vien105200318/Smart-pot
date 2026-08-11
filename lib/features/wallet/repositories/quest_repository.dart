@@ -65,4 +65,26 @@ class QuestRepository {
     }
     await batch.commit();
   }
+
+  /// Claim quest, chống double-claim. Trả về true nếu claim thành công.
+  Future<bool> claimQuest(String questId) async {
+    final docRef = _questsRef.doc(questId);
+
+    return _firestore.runTransaction((transaction) async {
+      final doc = await transaction.get(docRef);
+      if (!doc.exists) return false;
+
+      final data = doc.data() as Map<String, dynamic>;
+      final isCompleted = data['isCompleted'] ?? false;
+      final claimed = data['claimed'] ?? false;
+
+      if (!isCompleted || claimed) return false;
+
+      transaction.update(docRef, {
+        'claimed': true,
+        'claimedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    });
+  }
 }

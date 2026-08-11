@@ -65,14 +65,16 @@ class SlotService {
   // unlock slot
 
   Future<bool> unlockSlot(int slotIndex) async {
-  final balance = await _walletRepository.getBalance();
-  if (balance < WalletConstants.slotCost) return false;
+    final spent = await _walletRepository.spendCoins(
+      WalletConstants.slotCost,
+      reason: 'slot_unlock',
+    );
+    if (!spent) return false;
 
-  await _userDoc.update({
-    'balance': FieldValue.increment(-WalletConstants.slotCost),
-    'unlockedSlots': FieldValue.arrayUnion([slotIndex]),
-  });
-  return true;
+    await _userDoc.update({
+      'unlockedSlots': FieldValue.arrayUnion([slotIndex]),
+    });
+    return true;
   }
 
 }

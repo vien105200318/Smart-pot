@@ -51,7 +51,6 @@ class SmartPotApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
-    final goRouter = ref.watch(goRouterProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false, 
       title: 'Smart Pot',

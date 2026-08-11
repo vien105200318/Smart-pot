@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
 import 'package:smart_pot/core/providers/locale_provider.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
@@ -11,6 +12,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_pot/core/utils/image_helper.dart';
 import 'package:smart_pot/features/dashboard/repositories/pots_repository.dart';
+import 'package:smart_pot/features/wallet/widgets/daily_login_dialog.dart';
 
 
 class LanguageNotifier extends Notifier<String> {
@@ -294,6 +296,30 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               subtitle: getLanguageName(currentLocale),
               color: Colors.orangeAccent,
               onTap: () => _showLanguagePicker(context, ref, currentLocale),
+            ),
+            const SizedBox(height: 32),
+            const Text('WALLET & COINS', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            const SizedBox(height: 16),
+            _buildSettingsTile(
+              icon: Icons.account_balance_wallet,
+              title: 'Ví greenCoins',
+              subtitle: 'Xem số dư, nhiệm vụ, điểm danh',
+              color: const Color(0xFF00C896),
+              onTap: () => context.push('/wallet'),
+            ),
+            _buildSettingsTile(
+              icon: Icons.calendar_month,
+              title: 'Điểm danh hằng ngày',
+              subtitle: 'Nhận coins miễn phí mỗi ngày',
+              color: Colors.orangeAccent,
+              onTap: () => showDailyLoginDialog(context, ref),
+            ),
+            _buildSettingsTile(
+              icon: Icons.assignment_outlined,
+              title: 'Nhiệm vụ',
+              subtitle: 'Hoàn thành quest để kiếm coins',
+              color: Colors.blueAccent,
+              onTap: () => context.push('/wallet'),
             ),
             const SizedBox(height: 32),
             const Text('DEVICE', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),

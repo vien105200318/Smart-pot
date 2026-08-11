@@ -2,12 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../repositories/wallet_repository.dart';
 
-class WalletCard extends ConsumerWidget {
+class WalletCard extends ConsumerStatefulWidget {
   const WalletCard({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletCard> createState() => _WalletCardState();
+}
+
+class _WalletCardState extends ConsumerState<WalletCard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<int> _balanceAnimation;
+  int _displayedBalance = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _animateTo(int target) {
+    _balanceAnimation = IntTween(begin: _displayedBalance, end: target).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    )..addListener(() {
+        setState(() => _displayedBalance = _balanceAnimation.value);
+      });
+    _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wallet = ref.watch(walletStreamProvider).value;
+
+    if (wallet != null && wallet.balance != _displayedBalance && _controller.isCompleted) {
+      _animateTo(wallet.balance);
+    } else if (wallet != null && _displayedBalance == 0) {
+      _displayedBalance = wallet.balance;
+    }
 
     return Container(
       width: double.infinity,
@@ -38,7 +77,7 @@ class WalletCard extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            wallet == null ? '...' : '${wallet.balance}',
+            _displayedBalance.toString(),
             style: const TextStyle(color: Colors.black87, fontSize: 44, fontWeight: FontWeight.bold, height: 1),
           ),
           const SizedBox(height: 16),

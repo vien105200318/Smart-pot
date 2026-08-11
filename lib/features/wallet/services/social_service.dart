@@ -1,11 +1,9 @@
 import 'package:share_plus/share_plus.dart';
-
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SocialService {
-  // claim share app
   static const int shareReward = 20;
-  // claim whem friend sigin from link aff
   static const int inviteReward = 50;
 
   Future<bool> shareApp() async {
@@ -15,5 +13,25 @@ class SocialService {
     );
     return result.status == ShareResultStatus.success;
   }
-} 
 
+  Future<bool> inviteFriend(String friendEmail) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return false;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('invitations')
+          .doc(friendEmail)
+          .set({
+        'inviterId': currentUser.uid,
+        'inviterEmail': currentUser.email,
+        'invitedEmail': friendEmail,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+}

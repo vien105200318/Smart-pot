@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/welcome_screen.dart';
-import '../../features/dashboard/home_screen.dart';
 import '../../features/dashboard/main_layout.dart';
+import '../../features/wallet/screens/wallet_screen.dart';
 
 
 final authStateProvider = StreamProvider<User?>((ref) {
@@ -43,7 +42,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         name: 'home',
         builder: (context, state) => const MainLayout(),
-      )
+      ),
+      GoRoute(
+        path: '/wallet',
+        name: 'wallet',
+        builder: (context, state) => const WalletScreen(),
+      ),
     ]
   );
 });
