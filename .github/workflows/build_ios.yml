@@ -24,9 +24,14 @@ jobs:
       # Do NOT commit ios/Podfile: it triggers a CocoaPods+SPM hybrid that
       # fails with "sandbox is not in sync with the Podfile.lock".
 
-      - name: 🆙 Update iOS Deployment Target
+      - name: 🆙 Patch iOS build settings (deployment target + signing team)
         run: |
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' ios/Runner.xcodeproj/project.pbxproj  
+          # iOS Deployment Target 15.0 (SPM build reads this from the pbxproj)
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0/IPHONEOS_DEPLOYMENT_TARGET = 15.0/g' ios/Runner.xcodeproj/project.pbxproj
+          # Placeholder DEVELOPMENT_TEAM: 'flutter build ios --no-codesign' still
+          # requires a team in project.pbxproj even though signing is disabled.
+          # The value is never used because --no-codesign sets CODE_SIGNING_ALLOWED=NO.
+          perl -i -pe 's/(PRODUCT_BUNDLE_IDENTIFIER = com\.example\.smartPot;)/$1\n\t\t\t\tDEVELOPMENT_TEAM = 0000000000;/g' ios/Runner.xcodeproj/project.pbxproj
 
       # Build iOS với cờ --release
       - name: 🛠️ Build iOS App
