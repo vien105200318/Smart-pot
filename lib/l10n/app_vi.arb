@@ -52,5 +52,16 @@
   "waterStreakQuestTitle": "Chăm sóc liên tục",
   "waterStreakQuestDesc": "Tưới cây 3 lần hôm nay",
   "dailyLoginQuestTitle": "Đăng nhập mỗi ngày",
-  "dailyLoginQuestDesc": "Hoàn thành daily login"
+  "dailyLoginQuestDesc": "Hoàn thành daily login",
+  "walletTitle": "Ví greenCoins",
+  "walletBalance": "Số dư",
+  "walletTotalEarned": "Đã kiếm",
+  "walletStreak": "Streak",
+  "dailyLoginTitle": "Điểm danh hằng ngày",
+  "dailyLoginClaimed": "Đã nhận hôm nay",
+  "dailyLoginClaim": "Nhận",
+  "questsTitle": "Nhiệm vụ",
+  "questReady": "SẴN SÀNG",
+  "questClaim": "NHẬN",
+  "earnMoreTitle": "Kiếm thêm coins"
 }

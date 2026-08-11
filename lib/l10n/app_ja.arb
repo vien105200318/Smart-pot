@@ -52,5 +52,16 @@
   "waterStreakQuestTitle": "水やりを続ける",
   "waterStreakQuestDesc": "今日は植物に3回水やりをします",
   "dailyLoginQuestTitle": "毎日のログイン",
-  "dailyLoginQuestDesc": "今日のデイリーログインを完了します"
+  "dailyLoginQuestDesc": "今日のデイリーログインを完了します",
+  "walletTitle": "greenCoinsウォレット",
+  "walletBalance": "残高",
+  "walletTotalEarned": "総獲得",
+  "walletStreak": "連続",
+  "dailyLoginTitle": "毎日ログイン",
+  "dailyLoginClaimed": "今日は受け取り済み",
+  "dailyLoginClaim": "受け取る",
+  "questsTitle": "クエスト",
+  "questReady": "受取可能",
+  "questClaim": "受け取る",
+  "earnMoreTitle": "コインをもっと稼ぐ"
 }

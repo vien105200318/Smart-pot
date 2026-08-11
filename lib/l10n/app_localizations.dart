@@ -469,13 +469,13 @@ abstract class AppLocalizations {
   /// No description provided for @questReady.
   ///
   /// In en, this message translates to:
-  /// **'Ready'**
+  /// **'READY'**
   String get questReady;
 
   /// No description provided for @questClaim.
   ///
   /// In en, this message translates to:
-  /// **'Claim'**
+  /// **'CLAIM'**
   String get questClaim;
 
   /// No description provided for @earnMoreTitle.

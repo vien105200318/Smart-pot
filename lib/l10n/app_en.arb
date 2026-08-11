@@ -59,5 +59,16 @@
   "waterStreakQuestTitle": "Keep watering",
   "waterStreakQuestDesc": "Water your plant 3 times today",
   "dailyLoginQuestTitle": "Daily login",
-  "dailyLoginQuestDesc": "Complete today's daily login"
+  "dailyLoginQuestDesc": "Complete today's daily login",
+  "walletTitle": "greenCoins Wallet",
+  "walletBalance": "Balance",
+  "walletTotalEarned": "Total Earned",
+  "walletStreak": "Streak",
+  "dailyLoginTitle": "Daily Login",
+  "dailyLoginClaimed": "Claimed Today",
+  "dailyLoginClaim": "Claim",
+  "questsTitle": "Quests",
+  "questReady": "READY",
+  "questClaim": "CLAIM",
+  "earnMoreTitle": "Earn More Coins"
 }
