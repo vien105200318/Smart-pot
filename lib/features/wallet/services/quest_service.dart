@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/quest_model.dart';
+import '../utils/date_utils.dart';
 
 final questServiceProvider = Provider<QuestService>((ref) {
   return QuestService(FirebaseFirestore.instance);
@@ -20,9 +21,8 @@ class QuestService {
     return _firestore.collection('users').doc(user.uid).collection('quests');
   }
 
-  /// Tăng progress cho quest cùng [type], tự động đánh dấu completed khi đủ target.
-  /// Bỏ qua quest đã hoàn thành hoặc đã claim.
   Future<void> incrementProgress(QuestType type) async {
+    final today = todayKey();
     final snapshot = await _questsRef.where('type', isEqualTo: type.name).get();
     if (snapshot.docs.isEmpty) return;
 
@@ -31,17 +31,32 @@ class QuestService {
 
     for (final doc in snapshot.docs) {
       final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      final isCompleted = data['isCompleted'] ?? false;
-      final claimed = data['claimed'] ?? false;
+      var isCompleted = data['isCompleted'] ?? false;
+      var claimed = data['claimed'] ?? false;
+      var progress = (data['progress'] ?? 0) as int;
+
+      if ((data['dateKey'] ?? '') != today) {
+        progress = 0;
+        isCompleted = false;
+        claimed = false;
+        batch.update(doc.reference, {
+          'dateKey': today,
+          'progress': 0,
+          'isCompleted': false,
+          'claimed': false,
+          'completedAt': null,
+        });
+        changed = true;
+      }
+
       if (isCompleted || claimed) continue;
 
       final target = (data['target'] ?? 1) as int;
-      final progress = (data['progress'] ?? 0) as int;
-
       final newProgress = progress + 1;
       final done = newProgress >= target;
 
       batch.update(doc.reference, {
+        'dateKey': today,
         'progress': newProgress,
         'isCompleted': done,
         'completedAt': done ? FieldValue.serverTimestamp() : null,

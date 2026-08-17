@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/date_utils.dart';
 
 final questRepositoryProvider = Provider<QuestRepository>((ref) {
   return QuestRepository(FirebaseFirestore.instance);
@@ -35,6 +36,7 @@ class QuestRepository {
   }
 
   Future<void> createDefaultQuests() async {
+    final today = todayKey();
     final defaultQuests = [
       {
         'type': 'waterPlant',
@@ -42,6 +44,7 @@ class QuestRepository {
         'target': 1,
         'progress': 0,
         'isCompleted': false,
+        'dateKey': today,
       },
       {
         'type': 'waterPlant',
@@ -49,6 +52,7 @@ class QuestRepository {
         'target': 3,
         'progress': 0,
         'isCompleted': false,
+        'dateKey': today,
       },
       {
         'type': 'dailyLogin',
@@ -56,6 +60,7 @@ class QuestRepository {
         'target': 1,
         'progress': 0,
         'isCompleted': false,
+        'dateKey': today,
       },
     ];
 
@@ -66,7 +71,6 @@ class QuestRepository {
     await batch.commit();
   }
 
-  /// Claim quest, chống double-claim. Trả về true nếu claim thành công.
   Future<bool> claimQuest(String questId) async {
     final docRef = _questsRef.doc(questId);
 
@@ -75,6 +79,19 @@ class QuestRepository {
       if (!doc.exists) return false;
 
       final data = doc.data() as Map<String, dynamic>;
+
+      // Quest của ngày cũ: reset trước, và không cho claim hôm nay
+      if ((data['dateKey'] ?? '') != todayKey()) {
+        transaction.update(docRef, {
+          'dateKey': todayKey(),
+          'progress': 0,
+          'isCompleted': false,
+          'claimed': false,
+          'completedAt': null,
+        });
+        return false;
+      }
+
       final isCompleted = data['isCompleted'] ?? false;
       final claimed = data['claimed'] ?? false;
 

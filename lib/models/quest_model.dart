@@ -23,6 +23,7 @@ class QuestModel {
   final int progress;      
   final bool isCompleted;
   final DateTime? completedAt;
+  final String dateKey;
 
 
   QuestModel({
@@ -32,6 +33,7 @@ class QuestModel {
     required this.type,
     required this.reward,
     required this.target,
+    this.dateKey = '',
     this.progress = 0,
     this.isCompleted = false,
     this.completedAt, 
@@ -51,6 +53,7 @@ class QuestModel {
       target: data['target'] ?? 1,
       progress: data['progress'] ?? 0,
       isCompleted: data['isCompleted'] ?? false,
+      dateKey: data['dateKey'] ?? '',
       completedAt: data['completedAt'] != null
           ? (data['completedAt'] as Timestamp).toDate()
           : null,
@@ -65,6 +68,7 @@ class QuestModel {
       'target': target,
       'progress': progress,
       'isCompleted': isCompleted,
+      'dateKey': dateKey,
       'completedAt': completedAt != null
           ? Timestamp.fromDate(completedAt!)
           : null,
@@ -85,6 +89,7 @@ class QuestModel {
       progress: progress ?? this.progress,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
+      dateKey: dateKey,
     );
   }
   static QuestType _questTypeFromString(String value) {
