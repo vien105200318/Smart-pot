@@ -14,85 +14,75 @@ final walletStreamProvider = StreamProvider<GreenCoinModel>((ref) async* {
   yield* repository.getWalletStream();
 });
 
-final transactionStreamProvider = StreamProvider<List<QueryDocumentSnapshot>>((ref) {
+final transactionStreamProvider = StreamProvider<List<QueryDocumentSnapshot>>((
+  ref,
+) {
   final repository = ref.watch(walletRepositoryProvider);
   return repository.getTransactionsStream();
 });
-
 
 class WalletRepository {
   final FirebaseFirestore _firestore;
 
   WalletRepository(this._firestore);
-// user ID 
-String? get _userId => FirebaseAuth.instance.currentUser?.uid;
-// referent den document walet cua user
+  // user ID
+  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  // referent den document walet cua user
 
-DocumentReference get _walletDoc => _firestore.collection('users').doc(_userId);
+  DocumentReference get _walletDoc =>
+      _firestore.collection('users').doc(_userId);
 
+  // lay string wallet realtime
 
-
-
-// lay string wallet realtime 
-
-
-Stream<GreenCoinModel> getWalletStream() {
-  if (_userId == null) {
-    return Stream.value(GreenCoinModel(
-      userId: '',
-      balance: 0,
-      totalEarned: 0,
-      streakDays: 0,
-    ));
-  }
-  return _walletDoc.snapshots().map((doc){
-    if (doc.exists){
-      return GreenCoinModel.fromFireStore(doc);
+  Stream<GreenCoinModel> getWalletStream() {
+    if (_userId == null) {
+      return Stream.value(
+        GreenCoinModel(userId: '', balance: 0, totalEarned: 0, streakDays: 0),
+      );
     }
-    return GreenCoinModel(
-      userId: '',
-      balance: 0,
-      totalEarned: 0,
-      streakDays: 0,
-    );
+    return _walletDoc.snapshots().map((doc) {
+      if (doc.exists) {
+        return GreenCoinModel.fromFireStore(doc);
+      }
+      return GreenCoinModel(
+        userId: '',
+        balance: 0,
+        totalEarned: 0,
+        streakDays: 0,
+      );
+    });
+  }
 
+  // check balance hien tai
 
+  Future<int> getBalance() async {
+    if (_userId == null) return 0;
 
-  });
+    final doc = await _walletDoc.get();
+    if (!doc.exists) return 0;
 
-}
+    final data = doc.data() as Map<String, dynamic>? ?? {};
+    return data['balance'] ?? 0;
+  }
 
-// check balance hien tai
+  // đảm bảo doc ví tồn tại (tạo lần đầu)
+  Future<void> ensureWalletDoc() async {
+    if (_userId == null) return;
 
+    final doc = await _walletDoc.get();
+    if (doc.exists) return;
 
-Future<int> getBalance() async {
-  if (_userId == null) return 0;
-  
-  final doc = await _walletDoc.get();
-  if (!doc.exists) return 0;
+    await _walletDoc.set({
+      'balance': 0,
+      'totalEarned': 0,
+      'streakDays': 0,
+      'unlockedSlots': [0],
+    });
+  }
 
-  final data = doc.data() as Map<String, dynamic>? ?? {};
-  return data['balance'] ?? 0;
-}
-// đảm bảo doc ví tồn tại (tạo lần đầu)
-Future<void> ensureWalletDoc() async {
-  if (_userId == null) return;
+  // + coins
 
-  final doc = await _walletDoc.get();
-  if (doc.exists) return;
-
-  await _walletDoc.set({
-    'balance': 0,
-    'totalEarned': 0,
-    'streakDays': 0,
-    'unlockedSlots': [0], // ô chậu đầu tiên mặc định mở
-  });
-}
-
-// + coins 
-
-
-Future<void> addCoins(int amount, {String reason = 'unknown'}) async {
+  Future<void> addCoins(int amount, {String reason = 'unknown'}) async {
     if (_userId == null) throw Exception('Chưa đăng nhập');
     if (amount <= 0) throw Exception('Số coin phải lớn hơn 0');
 
@@ -104,18 +94,16 @@ Future<void> addCoins(int amount, {String reason = 'unknown'}) async {
     }, SetOptions(merge: true));
     await _logTransaction(amount: amount, type: 'earn', reason: reason);
   }
-// - coins
+  // - coins
 
-Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
+  Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
     if (_userId == null) throw Exception('Chưa đăng nhập');
     if (amount <= 0) throw Exception('Số coin phải lớn hơn 0');
 
     final currentBalance = await getBalance();
     if (currentBalance < amount) return false;
 
-    await _walletDoc.update({
-      'balance': FieldValue.increment(-amount),
-    });
+    await _walletDoc.update({'balance': FieldValue.increment(-amount)});
     await _logTransaction(amount: -amount, type: 'spend', reason: reason);
     return true;
   }
@@ -135,12 +123,10 @@ Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
         'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      // Không làm hỏng luồng add/spend coins nếu rules chưa cho phép sub-collection
       debugPrint('Log transaction lỗi: $e');
     }
   }
 
-  // stream lịch sử giao dịch
   Stream<List<QueryDocumentSnapshot>> getTransactionsStream() {
     if (_userId == null) return Stream.value([]);
     return _walletDoc
@@ -151,7 +137,7 @@ Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
         .map((snapshot) => snapshot.docs);
   }
 
-  //daily login update 
+  //daily login update
   Future<void> updateDailyLogin({
     required DateTime loginDate,
     required int newStreak,
@@ -163,8 +149,4 @@ Future<bool> spendCoins(int amount, {String reason = 'unknown'}) async {
       'streakDays': newStreak,
     }, SetOptions(merge: true));
   }
-
 }
-
-
-

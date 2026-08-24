@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'services/notification_service.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:smart_pot/core/providers/locale_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -16,12 +17,14 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await NotificationService.initialize();
-  
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await setupPushNotifications();
+
+  final prefs = await SharedPreferences.getInstance();
 
   runApp(const ProviderScope(child: SmartPotApp()));
 }
@@ -29,11 +32,7 @@ void main() async {
 Future<void> setupPushNotifications() async {
   final messaging = FirebaseMessaging.instance;
 
-  await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  await messaging.requestPermission(alert: true, badge: true, sound: true);
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     NotificationService.showLocalNotification(
@@ -52,27 +51,23 @@ class SmartPotApp extends ConsumerWidget {
     final isDarkMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false, 
+      debugShowCheckedModeBanner: false,
       title: 'Smart Pot',
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: Colors.grey[100],
-        colorScheme: const ColorScheme.light(
-          primary: Color(0xFF00C896),
-        ),
+        colorScheme: const ColorScheme.light(primary: Color(0xFF00C896)),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF161B22),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF00C896),
-        ),
+        colorScheme: const ColorScheme.dark(primary: Color(0xFF00C896)),
       ),
-      locale: locale, 
+      locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      
+
       routerConfig: ref.watch(goRouterProvider),
     );
   }
