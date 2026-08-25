@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_pot/core/utils/image_helper.dart';
 import 'package:smart_pot/core/widgets/error_state_widget.dart';
+import 'package:smart_pot/core/widgets/fade_slide_in.dart';
 import 'package:smart_pot/features/dashboard/repositories/pots_repository.dart';
 import 'package:smart_pot/features/wallet/widgets/daily_login_dialog.dart';
 
@@ -113,11 +114,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Settings',
+        child: FadeSlideIn(
+          duration: const Duration(milliseconds: 400),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Settings',
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface, letterSpacing: -0.5),
             ),
             const SizedBox(height: 32),
@@ -377,9 +380,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
+        ),
+       ),
+     );
+   }
   Future<void> _showEditProfileDialog(BuildContext context, String currentName) async {
     final defaultName = currentName == 'Người dùng Smart Pot' ? '' : currentName;
     final TextEditingController nameController = TextEditingController(text: defaultName);

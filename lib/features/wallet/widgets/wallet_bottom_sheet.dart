@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:smart_pot/core/widgets/fade_slide_in.dart';
 import '../repositories/quest_repository.dart';
 import '../repositories/wallet_repository.dart';
 import '../services/social_service.dart';
@@ -55,9 +56,11 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              child: FadeSlideIn(
+                duration: const Duration(milliseconds: 400),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Row(
                     children: [
                       Container(
@@ -89,8 +92,9 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
                   const SizedBox(height: 20),
                   const QuestsList(),
                   const SizedBox(height: 20),
-                  _shareTile(),
-                ],
+                   _shareTile(),
+                 ],
+               ),
               ),
             ),
           ),

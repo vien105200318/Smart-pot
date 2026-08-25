@@ -33,14 +33,40 @@ class MetricCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Icon(icon, color: color, size: 28),
-              Text(
-                value,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (child, animation) {
+                  return SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: Text(
+                  value,
+                  key: ValueKey(value), // key thay đổi → trigger animation
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(title, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14)),
+          Text(
+            title,
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+          ),
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: progress,

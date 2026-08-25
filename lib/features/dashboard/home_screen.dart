@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/core/widgets/shimmer_box.dart';
 import 'package:smart_pot/core/widgets/error_state_widget.dart';
+import 'package:smart_pot/core/widgets/fade_slide_in.dart';
 import 'package:smart_pot/features/dashboard/widgets/metric_card.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
@@ -29,10 +30,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           physics: const BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. BANNER LUNA
+          child: FadeSlideIn(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. BANNER LUNA
               Container(
                 width: double.infinity,
                 height: 220,
@@ -226,6 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
              ],
            ),
+          ),
          ),
        ),
      );
