@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:smart_pot/l10n/app_localizations.dart'; 
+import 'package:smart_pot/core/widgets/error_state_widget.dart';
+import 'package:smart_pot/l10n/app_localizations.dart';
 import 'repositories/sensor_repository.dart';
 
 class DevicesTab extends ConsumerWidget {
@@ -19,19 +20,30 @@ class DevicesTab extends ConsumerWidget {
           children: [
             Text(
               lang.connectedDevices,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
             Text(
               lang.devicesDesc,
-              style: const TextStyle(color: Colors.white54, fontSize: 16),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 16),
             ),
             const SizedBox(height: 24),
       
             Expanded(
               child: sensorAsyncValue.when(
                 loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-                error: (error, stack) => Center(child: Text(lang.syncError(error.toString()), style: const TextStyle(color: Colors.redAccent))),
+                error: (error, stack) {
+                  debugPrint('Devices stream lỗi: $error');
+                  return ErrorStateWidget(
+                    title: 'Không tải được thiết bị',
+                    onRetry: () => ref.invalidate(sensorStreamProvider),
+                  );
+                },
                 data: (data) {
                   final bool isOnline = data['isOnline'] ?? false;
                   final bool isWatering = data['pumpStatus'] ?? false;
@@ -41,6 +53,7 @@ class DevicesTab extends ConsumerWidget {
                     physics: const BouncingScrollPhysics(),
                     children: [
                       _buildDeviceCard(
+                        context: context,
                         icon: Icons.memory,
                         title: lang.esp32Board,
                         subtitle: 'Wi-Fi Module • IP: 192.168.1.45',
@@ -49,8 +62,9 @@ class DevicesTab extends ConsumerWidget {
                         isActive: isOnline,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildDeviceCard(
+                        context: context,
                         icon: Icons.water_drop,
                         title: lang.waterPumpRelay,
                         subtitle: 'GPIO 4 • 5V DC Pump',
@@ -61,6 +75,7 @@ class DevicesTab extends ConsumerWidget {
                       const SizedBox(height: 16),
 
                       _buildDeviceCard(
+                        context: context,
                         icon: Icons.cloud,
                         title: lang.mistMaker,
                         subtitle: 'GPIO 5 • 24V Humidifier',
@@ -71,12 +86,13 @@ class DevicesTab extends ConsumerWidget {
                       const SizedBox(height: 16),
 
                       _buildDeviceCard(
+                        context: context,
                         icon: Icons.sensors,
                         title: lang.envSensors,
                         subtitle: 'DHT11 & Capacitive Soil',
                         status: isOnline ? lang.reading : lang.offline,
                         statusColor: isOnline ? const Color(0xFF00C896) : Colors.redAccent,
-                        isActive: isOnline, 
+                        isActive: isOnline,
                       ),
                     ],
                   );
@@ -90,6 +106,7 @@ class DevicesTab extends ConsumerWidget {
   }
 
   Widget _buildDeviceCard({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -97,14 +114,17 @@ class DevicesTab extends ConsumerWidget {
     required Color statusColor,
     required bool isActive,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? statusColor.withOpacity(0.5) : Colors.white.withOpacity(0.05),
+          color: isActive
+              ? statusColor.withOpacity(0.5)
+              : colorScheme.outlineVariant,
           width: isActive ? 1.5 : 1.0,
         ),
         boxShadow: isActive ? [
@@ -131,13 +151,13 @@ class DevicesTab extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title, 
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
+                  title,
+                  style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.bold)
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle, 
-                  style: const TextStyle(color: Colors.white54, fontSize: 13)
+                  subtitle,
+                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)
                 ),
               ],
             ),

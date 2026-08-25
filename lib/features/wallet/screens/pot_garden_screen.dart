@@ -36,9 +36,12 @@ class _PotGardenScreenState extends ConsumerState<PotGardenScreen> {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Vườn chậu cây',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const Spacer(),
                 IconButton(
@@ -55,14 +58,18 @@ class _PotGardenScreenState extends ConsumerState<PotGardenScreen> {
                 ),
                 Text(
                   '${slotStatuses.where((s) => s.state != SlotState.locked).length} / ${WalletConstants.maxSlots}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 14),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Chạm ô trống để kết nối ESP · Chạm ô có cây để xem',
-              style: TextStyle(color: Colors.white54, fontSize: 16),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 16),
             ),
             const SizedBox(height: 24),
             Expanded(
@@ -125,19 +132,28 @@ class _SlotCell extends ConsumerWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.lock_outline, color: Colors.white38, size: 30),
+            Icon(Icons.lock_outline,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 30),
             const SizedBox(height: 8),
             Text('${WalletConstants.slotCost}',
-                style: const TextStyle(color: Colors.orangeAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                style: const TextStyle(
+                    color: Colors.orangeAccent,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text('Ô ${index + 1}', style: const TextStyle(color: Colors.white38, fontSize: 11)),
+            Text('Ô ${index + 1}',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 11)),
           ],
         ),
       ),
@@ -169,7 +185,10 @@ class _SlotCell extends ConsumerWidget {
             const Icon(Icons.add_circle_outline, color: Color(0xFF00C896), size: 32),
             const SizedBox(height: 8),
             Text('Ô ${index + 1}',
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
             const Text('Kết nối ESP',
                 style: TextStyle(color: Color(0xFF00C896), fontSize: 11, fontWeight: FontWeight.bold)),
@@ -204,15 +223,23 @@ class _SlotCell extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.local_florist,
-                color: online ? const Color(0xFF00C896) : Colors.white38, size: 36),
+                color: online
+                    ? const Color(0xFF00C896)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 36),
             const SizedBox(height: 8),
             Text('Ô ${index + 1}',
-                style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
             Text(
               isActive ? 'Đang xem' : (online ? 'Online' : 'Offline'),
               style: TextStyle(
-                color: isActive ? const Color(0xFF00C896) : Colors.white54,
+                color: isActive
+                    ? const Color(0xFF00C896)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               ),

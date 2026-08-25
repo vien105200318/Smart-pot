@@ -3,6 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/core/widgets/shimmer_box.dart';
+import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 
@@ -44,7 +46,8 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
   @override
   Widget build(BuildContext context) {
     final sensorAsyncValue = ref.watch(sensorStreamProvider);
-    final lang = AppLocalizations.of(context)!; 
+    final lang = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -54,16 +57,16 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
           children: [
             Text(
               lang.historyData,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.5),
             ),
             const SizedBox(height: 8),
             Text(
               lang.historyDesc,
-              style: const TextStyle(color: Colors.white54, fontSize: 15),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
             ),
             const SizedBox(height: 32),
 
@@ -84,8 +87,14 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                 padding: EdgeInsets.all(32.0),
                 child: CircularProgressIndicator(color: Color(0xFF00C896)),
               )),
-              error: (err, stack) => Center(
-                  child: Text(lang.syncError(err.toString()), style: const TextStyle(color: Colors.redAccent))),
+              error: (err, stack) {
+                debugPrint('History sync lỗi: $err');
+                return ErrorStateWidget(
+                  title: 'Không đồng bộ được dữ liệu',
+                  message: 'Vui lòng thử lại sau ít phút.',
+                  onRetry: () => ref.invalidate(sensorStreamProvider),
+                );
+              },
               data: (sensorData) {
                 final docId = sensorData['docId'] as String?;
                 
@@ -94,12 +103,12 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                     height: 200,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161B22),
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Text(
                       lang.noDeviceConnected,
-                      style: const TextStyle(color: Colors.white38),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                   );
                 }
@@ -117,12 +126,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const SizedBox(
-                            height: 300,
-                            child: Center(
-                                child: CircularProgressIndicator(
-                                    color: Color(0xFF00C896))),
-                          );
+                          return _buildChartsSkeleton();
                         }
 
                         final docs = snapshot.data?.docs ?? [];
@@ -132,12 +136,12 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             height: 200,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF161B22),
+                              color: colorScheme.surface,
                               borderRadius: BorderRadius.circular(24),
                             ),
                             child: Text(
                               lang.noData,
-                              style: const TextStyle(color: Colors.white38),
+                              style: TextStyle(color: colorScheme.onSurfaceVariant),
                             ),
                           );
                         }
@@ -200,10 +204,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                     const SizedBox(height: 40),
                     Text(
                       lang.recentActivities,
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                          color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 16),
 
@@ -217,18 +221,14 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                           .snapshots(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                              child: Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: CircularProgressIndicator(
-                                color: Color(0xFF00C896)),
-                          ));
+                          return _buildActivitiesSkeleton();
                         }
                         final docs = snapshot.data?.docs ?? [];
                         if (docs.isEmpty) {
                           return Center(
                               child: Text(lang.noRecentActivities,
-                                  style: const TextStyle(color: Colors.white38)));
+                                  style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant)));
                         }
                         return ListView.builder(
                           shrinkWrap: true,
@@ -247,7 +247,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                                 DateFormat('HH:mm - dd/MM/yyyy').format(time);
 
                             IconData iconData = Icons.history;
-                            Color iconColor = Colors.white54;
+                            Color iconColor = colorScheme.onSurfaceVariant;
                             final actionLower = action.toString().toLowerCase();
                             if (actionLower.contains('tưới') ||
                                 actionLower.contains('bơm') || actionLower.contains('water')) {
@@ -261,10 +261,10 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF161B22),
+                                color: colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                    color: Colors.white.withOpacity(0.05),
+                                    color: colorScheme.outlineVariant,
                                     width: 1.5),
                               ),
                               child: ListTile(
@@ -277,13 +277,14 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                                       color: iconColor, size: 20),
                                 ),
                                 title: Text(action,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
-                                        color: Colors.white)),
+                                        color: colorScheme.onSurface)),
                                 subtitle: Text(timeString,
-                                    style: const TextStyle(
-                                        color: Colors.white38, fontSize: 12)),
+                                    style: TextStyle(
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontSize: 12)),
                                 trailing: Text(value,
                                     style: const TextStyle(
                                         fontSize: 14,
@@ -320,11 +321,13 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
           border: Border.all(
               color: isActive
                   ? const Color(0xFF00C896).withOpacity(0.5)
-                  : Colors.white12),
+                  : Theme.of(context).colorScheme.outlineVariant),
         ),
         child: Text(_getTranslatedFilter(filterKey, lang), // Thay vì in text cứng, dịch nó ra
             style: TextStyle(
-                color: isActive ? const Color(0xFF00C896) : Colors.white54,
+                color: isActive
+                    ? const Color(0xFF00C896)
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                 fontSize: 13)),
       ),
@@ -339,13 +342,15 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
     required double maxY,
     bool isWater = false,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 200,
       padding: const EdgeInsets.only(right: 24, left: 12, top: 20, bottom: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05), width: 1.5),
+        border:
+            Border.all(color: colorScheme.outlineVariant, width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,8 +367,8 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                 ),
                 const SizedBox(width: 8),
                 Text(title,
-                    style: const TextStyle(
-                        color: Colors.white70,
+                    style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 14,
                         fontWeight: FontWeight.bold)),
               ],
@@ -378,7 +383,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.white.withOpacity(0.05),
+                    color: colorScheme.outlineVariant,
                     strokeWidth: 1,
                     dashArray: [5, 5],
                   ),
@@ -390,8 +395,8 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                       reservedSize: 36,
                       getTitlesWidget: (value, meta) => Text(
                         value.toInt().toString(),
-                        style: const TextStyle(
-                            color: Colors.white38,
+                        style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 10,
                             fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
@@ -412,8 +417,8 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               DateFormat(formatPattern).format(dates[index]),
-                              style: const TextStyle(
-                                  color: Colors.white38,
+                              style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold),
                             ),
@@ -439,7 +444,7 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
                       show: isWater,
                       getDotPainter: (spot, percent, barData, index) =>
                           FlDotCirclePainter(
-                        color: const Color(0xFF161B22),
+                        color: colorScheme.surface,
                         strokeColor: color,
                         strokeWidth: 2,
                         radius: 3,
@@ -464,6 +469,38 @@ class _HistoryTabState extends ConsumerState<HistoryTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChartsSkeleton() {
+    return Column(
+      children: List.generate(
+        3,
+        (_) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: ShimmerBox(
+            width: double.infinity,
+            height: 200,
+            radius: BorderRadius.circular(24),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivitiesSkeleton() {
+    return Column(
+      children: List.generate(
+        4,
+        (_) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ShimmerBox(
+            width: double.infinity,
+            height: 72,
+            radius: BorderRadius.circular(16),
+          ),
+        ),
       ),
     );
   }

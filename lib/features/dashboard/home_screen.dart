@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/core/widgets/shimmer_box.dart';
+import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/features/dashboard/widgets/metric_card.dart';
-import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart'; 
+import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:smart_pot/models/quest_model.dart';
 import 'package:smart_pot/features/wallet/services/quest_service.dart';
@@ -22,7 +24,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final lang = AppLocalizations.of(context)!;
     
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117), // Nền tối
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -73,12 +75,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 24),
               sensorAsyncValue.when(
-                loading: () => const Center(
-                  child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator(color: Color(0xFF00C896))),
-                ),
-                error: (error, stack) => Center(
-                  child: Text('Lỗi Firebase: $error', style: const TextStyle(color: Colors.redAccent)),
-                ),
+                loading: () => _buildHomeSkeleton(),
+                error: (error, stack) {
+                  debugPrint('Sensor stream lỗi: $error');
+                  return ErrorStateWidget(
+                    title: 'Không tải được dữ liệu',
+                    message: 'Kiểm tra kết nối mạng rồi thử lại nhé.',
+                    onRetry: () => ref.invalidate(sensorStreamProvider),
+                  );
+                },
                 data: (sensorData) {
                   final moisture = ((sensorData['moisture'] ?? sensorData['soil_moisture']) as num?)?.toDouble() ?? 0.0;
                   final temperature = (sensorData['temperature'] as num?)?.toDouble() ?? 0.0;
@@ -181,7 +186,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF161B22), 
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: isOnline 
@@ -207,8 +212,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   )
                                 ),
                                 Text(
-                                  isOnline ? 'WiFi: Connected • Sync: Real-time' : 'Device disconnected or sleeping', 
-                                  style: const TextStyle(color: Colors.white54, fontSize: 12)
+                                  isOnline ? 'WiFi: Connected • Sync: Real-time' : 'Device disconnected or sleeping',
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)
                                 ),
                               ],
                             ),
@@ -219,10 +224,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
               ),
-            ],
+             ],
+           ),
+         ),
+       ),
+     );
+   }
+
+  Widget _buildHomeSkeleton() {
+    return Column(
+      children: [
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.3,
+          children: List.generate(
+            4,
+            (_) => ShimmerBox(
+              width: double.infinity,
+              height: double.infinity,
+              radius: BorderRadius.circular(20),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: ShimmerBox(
+                width: double.infinity,
+                height: 56,
+                radius: BorderRadius.circular(16),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: ShimmerBox(
+                width: double.infinity,
+                height: 56,
+                radius: BorderRadius.circular(16),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        ShimmerBox(
+          width: double.infinity,
+          height: 76,
+          radius: BorderRadius.circular(16),
+        ),
+      ],
     );
   }
 }

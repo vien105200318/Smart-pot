@@ -5,20 +5,21 @@ class CameraTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Live Camera',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Real-time monitor feed from ESP32 camera module.',
-              style: TextStyle(color: Colors.white54, fontSize: 16),
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
             ),
             const SizedBox(height: 24),
             
@@ -88,20 +89,20 @@ class CameraTab extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1F2C),
+                color: colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.shield_outlined, color: Colors.white54, size: 28),
-                  SizedBox(width: 16),
+                  Icon(Icons.shield_outlined, color: colorScheme.onSurfaceVariant, size: 28),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('End-to-End Encrypted', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        SizedBox(height: 4),
-                        Text('Your live feed is secured and private.', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                        Text('End-to-End Encrypted', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text('Your live feed is secured and private.', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
                       ],
                     ),
                   ),

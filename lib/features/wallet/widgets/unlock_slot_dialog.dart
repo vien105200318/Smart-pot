@@ -10,21 +10,22 @@ class UnlockSlotDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return AlertDialog(
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
+      title: Text(
         'Mở khóa ô chậu',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.lock_open, color: Color(0xFF00C896), size: 48),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Mở khóa ô chậu mới để trồng thêm cây?',
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: colorScheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -49,7 +50,7 @@ class UnlockSlotDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+          child: Text('Hủy', style: TextStyle(color: colorScheme.onSurfaceVariant)),
         ),
         ElevatedButton(
           onPressed: () => _handleUnlock(context, ref),

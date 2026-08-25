@@ -119,10 +119,11 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFF0D1117), 
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: IndexedStack(
             index: _currentIndex,
             children: _screens,
@@ -144,7 +145,7 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
           floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
           bottomNavigationBar: BottomAppBar(
-            color: const Color(0xFF161B22), 
+            color: colorScheme.surface,
             shape: const CircularNotchedRectangle(),
             notchMargin: 8.0, 
             child: SizedBox(
@@ -241,7 +242,9 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
 
   Widget _buildNavItem({required IconData icon, required IconData activeIcon, required String label, required int index}) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? const Color(0xFF00C896) : Colors.white54;
+    final color = isSelected
+        ? const Color(0xFF00C896)
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return MaterialButton(
       minWidth: 75, 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/core/widgets/shimmer_box.dart';
+import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import '../repositories/quest_repository.dart';
 import '../repositories/wallet_repository.dart';
@@ -13,8 +15,14 @@ class QuestsList extends ConsumerWidget {
     final lang = AppLocalizations.of(context)!;
 
     return quests.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-      error: (e, _) => Text('Lỗi: $e', style: const TextStyle(color: Colors.redAccent)),
+      loading: () => _buildQuestsSkeleton(),
+      error: (e, _) {
+        debugPrint('Quests stream lỗi: $e');
+        return ErrorStateWidget(
+          title: 'Không tải được nhiệm vụ',
+          onRetry: () => ref.invalidate(questStreamProvider),
+        );
+      },
       data: (docs) {
         if (docs.isEmpty) {
           return const SizedBox.shrink();
@@ -23,12 +31,31 @@ class QuestsList extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(lang.questsTitle,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             ...docs.map((doc) => _QuestTile(data: doc.data() as Map<String, dynamic>, questId: doc.id)),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildQuestsSkeleton() {
+    return Column(
+      children: List.generate(
+        2,
+        (_) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ShimmerBox(
+            width: double.infinity,
+            height: 130,
+            radius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -49,6 +76,7 @@ class _QuestTileState extends ConsumerState<_QuestTile> {
   @override
   Widget build(BuildContext context) {
     final lang = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
     final type = widget.data['type'] ?? '';
     final target = (widget.data['target'] ?? 1) as int;
     final progress = (widget.data['progress'] ?? 0) as int;
@@ -65,12 +93,14 @@ class _QuestTileState extends ConsumerState<_QuestTile> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: canClaim
               ? const Color(0xFF00C896)
-              : (isCompleted ? const Color(0xFF00C896).withOpacity(0.5) : Colors.white.withOpacity(0.05)),
+              : (isCompleted
+                  ? const Color(0xFF00C896).withOpacity(0.5)
+                  : colorScheme.outlineVariant),
           width: canClaim ? 2 : 1,
         ),
       ),
@@ -81,7 +111,10 @@ class _QuestTileState extends ConsumerState<_QuestTile> {
             children: [
               Expanded(
                 child: Text(title,
-                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                    style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
               ),
               if (canClaim)
                 Container(
@@ -102,14 +135,14 @@ class _QuestTileState extends ConsumerState<_QuestTile> {
             ],
           ),
           const SizedBox(height: 4),
-          Text(desc, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+          Text(desc, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
           const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: value,
               minHeight: 8,
-              backgroundColor: Colors.white10,
+              backgroundColor: colorScheme.outlineVariant,
               valueColor: AlwaysStoppedAnimation(canClaim ? Colors.orangeAccent : const Color(0xFF00C896)),
             ),
           ),
@@ -117,7 +150,8 @@ class _QuestTileState extends ConsumerState<_QuestTile> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$progress / $target', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text('$progress / $target',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
               if (canClaim)
                 ElevatedButton(
                   onPressed: _isClaiming ? null : () => _claimQuest(reward),

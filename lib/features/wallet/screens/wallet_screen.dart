@@ -11,13 +11,15 @@ class WalletScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        title: const Text('Ví greenCoins',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text('Ví greenCoins',
+            style: TextStyle(
+                color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -57,8 +59,11 @@ class _TransactionList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Lịch sử giao dịch',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text('Lịch sử giao dịch',
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             ...docs.map((doc) => _TransactionTile(data: doc.data() as Map<String, dynamic>)),
           ],
@@ -85,9 +90,10 @@ class _TransactionTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border:
+            Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -95,7 +101,9 @@ class _TransactionTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(_reasonLabel(reason),
-                style: const TextStyle(color: Colors.white, fontSize: 14)),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14)),
           ),
           Text('${isEarn ? '+' : ''}$amount',
               style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 15)),
@@ -126,8 +134,11 @@ class _EarnMoreSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Kiếm thêm coins',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('Kiếm thêm coins',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         _EarnTile(
           icon: Icons.share,
@@ -174,23 +185,28 @@ class _EarnMoreSection extends ConsumerWidget {
 
   void _showInviteDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    final colorScheme = Theme.of(context).colorScheme;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161B22),
-        title: const Text('Mời bạn bè', style: TextStyle(color: Colors.white)),
+        backgroundColor: colorScheme.surface,
+        title: Text('Mời bạn bè', style: TextStyle(color: colorScheme.onSurface)),
         content: TextField(
           controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
+          style: TextStyle(color: colorScheme.onSurface),
+          decoration: InputDecoration(
             labelText: 'Email bạn bè',
-            labelStyle: TextStyle(color: Colors.white54),
+            labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
             hintText: 'friend@example.com',
-            hintStyle: TextStyle(color: Colors.white38),
+            hintStyle:
+                TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.6)),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Hủy', style: TextStyle(color: Colors.white54))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('Hủy',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00C896)),
             onPressed: () async {
@@ -234,15 +250,16 @@ class _EarnTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Row(
           children: [
@@ -256,15 +273,15 @@ class _EarnTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(title, style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                  Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
                 ],
               ),
             ),
             Text(reward, style: const TextStyle(color: Colors.orangeAccent, fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, color: Colors.white38),
+            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),

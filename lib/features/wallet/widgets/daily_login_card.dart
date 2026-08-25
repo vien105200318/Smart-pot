@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:smart_pot/core/widgets/shimmer_box.dart';
 import '../providers/wallet_provider.dart';
 import '../repositories/wallet_repository.dart';
 import '../services/daily_login_service.dart';
@@ -19,7 +20,11 @@ class _DailyLoginCardState extends ConsumerState<DailyLoginCard> {
     final wallet = ref.watch(walletStreamProvider).value;
 
     if (wallet == null) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF00C896)));
+      return ShimmerBox(
+        width: double.infinity,
+        height: 150,
+        radius: BorderRadius.circular(16),
+      );
     }
 
     final service = DailyLoginService();
@@ -29,14 +34,15 @@ class _DailyLoginCardState extends ConsumerState<DailyLoginCard> {
       oldStreak: wallet.streakDays,
     );
     final reward = service.calculateReward(nextStreak);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,8 +51,11 @@ class _DailyLoginCardState extends ConsumerState<DailyLoginCard> {
             children: [
               const Icon(Icons.calendar_month, color: Color(0xFF00C896)),
               const SizedBox(width: 10),
-              const Text('Điểm danh hằng ngày',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('Điểm danh hằng ngày',
+                  style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -64,9 +73,9 @@ class _DailyLoginCardState extends ConsumerState<DailyLoginCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(claimed ? 'Đã nhận hôm nay' : 'Nhận $reward greenCoins',
-                      style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                      style: TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600)),
                   Text('Streak: ${wallet.streakDays} ngày',
-                      style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
                 ],
               ),
               SizedBox(
@@ -127,7 +136,7 @@ class _DailyLoginCardState extends ConsumerState<DailyLoginCard> {
             ? Colors.orangeAccent
             : active
                 ? const Color(0xFF00C896)
-                : Colors.white12,
+                : Theme.of(context).colorScheme.outlineVariant,
       ),
     );
   }

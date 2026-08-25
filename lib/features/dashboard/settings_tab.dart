@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smart_pot/features/dashboard/device/wifi_setup_bottom_sheet.dart';
 import 'package:smart_pot/core/providers/locale_provider.dart';
+import 'package:smart_pot/core/theme/theme_provider.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smart_pot/core/utils/image_helper.dart';
+import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/features/dashboard/repositories/pots_repository.dart';
 import 'package:smart_pot/features/wallet/widgets/daily_login_dialog.dart';
 
@@ -98,6 +100,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     final isNotiEnabled = ref.watch(notificationProvider);
     final potsAsync = ref.watch(potsStreamProvider);
     final activeIndex = ref.watch(activeSlotIndexProvider);
+    final colorScheme = Theme.of(context).colorScheme;
     
         
     String getLanguageName(Locale loc){
@@ -113,9 +116,9 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Settings',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: -0.5),
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: colorScheme.onSurface, letterSpacing: -0.5),
             ),
             const SizedBox(height: 32),
             Row(
@@ -151,46 +154,50 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(displayName,
-                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.bold),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 4),
                       Text(email,
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+                          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
                           maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
                 IconButton(
                   onPressed: () => _showEditProfileDialog(context, displayName),
-                  icon: const Icon(Icons.edit_outlined, color: Colors.white54),
+                  icon: Icon(Icons.edit_outlined, color: colorScheme.onSurfaceVariant),
                 )
               ],
             ),
             const SizedBox(height: 40),
-            const Text('DEVICE CONTROL',
-                style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            Text('DEVICE CONTROL',
+                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
                         potsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF00C896))),
-              error: (e, _) => const Text('Lỗi tải dữ liệu', style: TextStyle(color: Colors.red)),
+              error: (e, _) => ErrorStateWidget(
+                title: 'Lỗi tải dữ liệu',
+                message: 'Không lấy được danh sách chậu cây.',
+                onRetry: () => ref.invalidate(potsStreamProvider),
+              ),
               data: (pots) {
                 if (pots.isEmpty) {
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161B22),
+                      color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      border: Border.all(color: colorScheme.outlineVariant),
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.sensors_off, color: Colors.white38, size: 40),
+                        Icon(Icons.sensors_off, color: colorScheme.onSurfaceVariant, size: 40),
                         const SizedBox(height: 12),
-                        const Text('Chưa có thiết bị nào được kết nối', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Text('Chưa có thiết bị nào được kết nối', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 4),
                         Text('Vui lòng vào "Wi-Fi Configuration" để cài đặt.',
-                          textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13)),
+                          textAlign: TextAlign.center, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
                       ],
                     ),
                   );
@@ -219,15 +226,15 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                             final isActive = pot.slotIndex == activeIndex;
                             return ChoiceChip(
                               avatar: Icon(Icons.circle, size: 10,
-                                  color: pot.isOnline ? const Color(0xFF00C896) : Colors.white38),
+                                  color: pot.isOnline ? const Color(0xFF00C896) : colorScheme.onSurfaceVariant),
                               label: Text('Ô ${(pot.slotIndex ?? 0) + 1}',
                                   style: TextStyle(
-                                      color: isActive ? Colors.black : Colors.white,
+                                      color: isActive ? Colors.black : colorScheme.onSurface,
                                       fontWeight: FontWeight.bold)),
                               selected: isActive,
-                              backgroundColor: const Color(0xFF0D1117),
+                              backgroundColor: colorScheme.surfaceContainerHighest,
                               selectedColor: const Color(0xFF00C896),
-                              side: BorderSide(color: isActive ? const Color(0xFF00C896) : Colors.white24),
+                              side: BorderSide(color: isActive ? const Color(0xFF00C896) : colorScheme.outlineVariant),
                               onSelected: (_) =>
                                   ref.read(activeSlotIndexProvider.notifier).setActive(pot.slotIndex ?? 0),
                             );
@@ -278,7 +285,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               },
             ),
             const SizedBox(height: 32),
-            const Text('GENERAL', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            Text('GENERAL', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             _buildSwitchTile(
               icon: Icons.notifications_active,
@@ -290,6 +297,16 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 ref.read(notificationProvider.notifier).setNoti(val);
               },
             ),
+            _buildSwitchTile(
+              icon: Icons.dark_mode_outlined,
+              title: 'Dark Mode',
+              subtitle: 'Giao diện tối',
+              color: const Color(0xFF8B5CF6),
+              value: ref.watch(themeModeProvider) == ThemeMode.dark,
+              onChanged: (val) => ref
+                  .read(themeModeProvider.notifier)
+                  .setMode(val ? ThemeMode.dark : ThemeMode.light),
+            ),
             _buildSettingsTile(
               icon: Icons.language,
               title: lang.settings,
@@ -298,7 +315,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               onTap: () => _showLanguagePicker(context, ref, currentLocale),
             ),
             const SizedBox(height: 32),
-            const Text('WALLET & COINS', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            Text('WALLET & COINS', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             _buildSettingsTile(
               icon: Icons.account_balance_wallet,
@@ -322,7 +339,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               onTap: () => context.push('/wallet'),
             ),
             const SizedBox(height: 32),
-            const Text('DEVICE', style: TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+            Text('DEVICE', style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
             const SizedBox(height: 16),
             _buildSettingsTile(
               icon: Icons.wifi,
@@ -346,8 +363,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
                 },
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                icon: Icon(Icons.logout, color: colorScheme.onSurface),
+                label: Text('Log Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.redAccent.withOpacity(0.1),
                   foregroundColor: Colors.redAccent,
@@ -367,28 +384,29 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     final defaultName = currentName == 'Người dùng Smart Pot' ? '' : currentName;
     final TextEditingController nameController = TextEditingController(text: defaultName);
     bool isLoading = false;
+    final colorScheme = Theme.of(context).colorScheme;
 
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setStateDialog) {
           return AlertDialog(
-            backgroundColor: const Color(0xFF161B22),
-            title: const Text('Cập nhật tài khoản', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            title: Text('Cập nhật tài khoản', style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
             content: TextField(
               controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              style: TextStyle(color: colorScheme.onSurface),
+              decoration: InputDecoration(
                 labelText: 'Tên hiển thị của bạn',
-                labelStyle: TextStyle(color: Colors.white54),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00C896))),
+                labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: colorScheme.outlineVariant)),
+                focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF00C896))),
               ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+                child: Text('Hủy', style: TextStyle(color: colorScheme.onSurfaceVariant)),
               ),
               ElevatedButton(
                 onPressed: isLoading ? null : () async {
@@ -454,13 +472,13 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: locales.map((item) {
           final isSelected = currentLocale.languageCode == item['code'];
           return ListTile(
-            title: Text(item['name']!, style: TextStyle(color: isSelected ? const Color(0xFF00C896) : Colors.white)),
+            title: Text(item['name']!, style: TextStyle(color: isSelected ? const Color(0xFF00C896) : Theme.of(ctx).colorScheme.onSurface)),
             onTap: () {
               ref.read(localeProvider.notifier).setLocale(Locale(item['code']!));
               Navigator.pop(ctx);
@@ -475,17 +493,17 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
     final result = await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF161B22),
-        title: const Text('Ngắt kết nối thiết bị', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text(
+        backgroundColor: Theme.of(ctx).colorScheme.surface,
+        title: Text('Ngắt kết nối thiết bị', style: TextStyle(color: Theme.of(ctx).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+        content: Text(
           'Bạn muốn chỉ ngắt kết nối để cài lại Wi-Fi, hay muốn xóa sạch toàn bộ lịch sử dữ liệu của chậu cây này khỏi hệ thống?',
-          style: TextStyle(color: Colors.white70, height: 1.5),
+          style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, 0), 
-            child: const Text('Hủy', style: TextStyle(color: Colors.white54)),
+            onPressed: () => Navigator.pop(ctx, 0),
+            child: Text('Hủy', style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, 1), 
@@ -548,6 +566,7 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
   }
 
   Widget _buildSettingsTile({required IconData icon, required String title, required String subtitle, required Color color, VoidCallback? onTap}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: InkWell(
@@ -556,9 +575,9 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF161B22),
+            color: colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: colorScheme.outlineVariant),
           ),
           child: Row(
             children: [
@@ -568,13 +587,13 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text(title, style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                    Text(subtitle, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white38),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -583,14 +602,15 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
   }
 
   Widget _buildSwitchTile({required IconData icon, required String title, required String subtitle, required Color color, required bool value, required Function(bool) onChanged}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF161B22),
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: value ? color.withOpacity(0.5) : Colors.white.withOpacity(0.05)),
+          border: Border.all(color: value ? color.withOpacity(0.5) : colorScheme.outlineVariant),
         ),
         child: Row(
           children: [
@@ -600,13 +620,13 @@ void _showLanguagePicker(BuildContext context, WidgetRef ref, Locale currentLoca
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(title, style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(color: value ? color : Colors.white54, fontSize: 13, fontWeight: value ? FontWeight.bold : FontWeight.normal)),
+                  Text(subtitle, style: TextStyle(color: value ? color : colorScheme.onSurfaceVariant, fontSize: 13, fontWeight: value ? FontWeight.bold : FontWeight.normal)),
                 ],
               ),
             ),
-            Switch(value: value, onChanged: onChanged, activeColor: color, activeTrackColor: color.withOpacity(0.3), inactiveThumbColor: Colors.white54, inactiveTrackColor: Colors.white12),
+            Switch(value: value, onChanged: onChanged, activeColor: color, activeTrackColor: color.withOpacity(0.3), inactiveThumbColor: colorScheme.onSurfaceVariant, inactiveTrackColor: colorScheme.surfaceContainerHighest),
           ],
         ),
       ),

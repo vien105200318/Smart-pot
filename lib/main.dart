@@ -9,6 +9,7 @@ import 'services/notification_service.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
 import 'package:smart_pot/core/providers/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_pot/providers/prefs_provider.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -26,7 +27,10 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  runApp(const ProviderScope(child: SmartPotApp()));
+  runApp(ProviderScope(
+    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    child: const SmartPotApp(),
+  ));
 }
 
 Future<void> setupPushNotifications() async {
@@ -48,21 +52,37 @@ class SmartPotApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeModeProvider);
+    final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Smart Pot',
-      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      themeMode: themeMode,
       theme: ThemeData(
         brightness: Brightness.light,
-        scaffoldBackgroundColor: Colors.grey[100],
-        colorScheme: const ColorScheme.light(primary: Color(0xFF00C896)),
+        scaffoldBackgroundColor: const Color(0xFFF6F7F9),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF00C896),
+          secondary: Color(0xFF007558),
+          surface: Colors.white,
+          onSurface: Color(0xFF1A1D21),
+          surfaceContainerHighest: Color(0xFFEFF1F4),
+          onSurfaceVariant: Color(0xFF57606A),
+          outlineVariant: Color(0xFFE3E5E8),
+        ),
       ),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF161B22),
-        colorScheme: const ColorScheme.dark(primary: Color(0xFF00C896)),
+        scaffoldBackgroundColor: const Color(0xFF0D1117),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00C896),
+          secondary: Color(0xFF007558),
+          surface: Color(0xFF161B22),
+          onSurface: Color(0xFFE6EDF3),
+          surfaceContainerHighest: Color(0xFF21262D),
+          onSurfaceVariant: Color(0xFF8B949E),
+          outlineVariant: Color(0xFF30363D),
+        ),
       ),
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

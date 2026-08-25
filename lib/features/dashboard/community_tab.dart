@@ -9,6 +9,7 @@ import 'package:smart_pot/core/utils/image_helper.dart';
 import 'package:smart_pot/features/community/story_viewer_screen.dart';
 import 'package:smart_pot/features/community/create_story_screen.dart';
 import 'package:smart_pot/features/community/post_comments_bottom_sheet.dart';
+import 'package:smart_pot/core/widgets/shimmer_box.dart';
 
 class CommunityTab extends StatelessWidget {
   const CommunityTab({super.key});
@@ -66,17 +67,77 @@ class CommunityTab extends StatelessWidget {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator(color: Color(0xFF00C896)));
+                      return _buildPostsSkeleton();
                     }
                     
                     if (snapshot.hasError) {
-                      return Center(child: Text('Lỗi: ${snapshot.error}', style: const TextStyle(color: Colors.redAccent)));
+                      debugPrint('Posts stream lỗi: ${snapshot.error}');
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.06),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.cloud_off_outlined,
+                                    size: 48, color: Colors.redAccent),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text('Không tải được bài viết',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                              const SizedBox(height: 8),
+                              const Text('Vui lòng thử lại sau.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.white54)),
+                            ],
+                          ),
+                        ),
+                      );
                     }
 
                     final docs = snapshot.data?.docs ?? [];
                     
                     if (docs.isEmpty) {
-                      return const Center(child: Text('Chưa có bài viết nào, hãy là người đầu tiên chia sẻ!', style: TextStyle(color: Colors.white54)));
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.06),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.forum_outlined,
+                                    size: 48, color: Color(0xFF00C896)),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text('Chưa có bài viết nào',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                              const SizedBox(height: 8),
+                              const Text(
+                                  'Hãy là người đầu tiên chia sẻ vườn của bạn!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.white54)),
+                            ],
+                          ),
+                        ),
+                      );
                     }
 
                     return ListView.builder(
@@ -171,7 +232,7 @@ class CommunityTab extends StatelessWidget {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFF00C896)));
+                return _buildStoriesSkeleton();
               }
 
               final docs = snapshot.data?.docs ?? [];
@@ -452,7 +513,7 @@ class CommunityTab extends StatelessWidget {
   void _showPostOptions(BuildContext context, String docId) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -468,6 +529,79 @@ class CommunityTab extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPostsSkeleton() {
+    const base = Color(0xFF21262D);
+    const highlight = Color(0xFF30363D);
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      itemCount: 3,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ShimmerBox(
+                    width: 44,
+                    height: 44,
+                    radius: BorderRadius.circular(22),
+                    baseColor: base,
+                    highlightColor: highlight),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ShimmerBox(
+                      width: double.infinity,
+                      height: 14,
+                      baseColor: base,
+                      highlightColor: highlight),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ShimmerBox(
+              width: double.infinity,
+              height: 190,
+              radius: BorderRadius.circular(20),
+              baseColor: base,
+              highlightColor: highlight,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStoriesSkeleton() {
+    const base = Color(0xFF21262D);
+    const highlight = Color(0xFF30363D);
+    return Row(
+      children: List.generate(
+        4,
+        (_) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            children: [
+              ShimmerBox(
+                  width: 62,
+                  height: 62,
+                  radius: BorderRadius.circular(31),
+                  baseColor: base,
+                  highlightColor: highlight),
+              const SizedBox(height: 8),
+              ShimmerBox(
+                  width: 48,
+                  height: 10,
+                  baseColor: base,
+                  highlightColor: highlight),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -507,7 +641,7 @@ class StoryBubble extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              username.split(' ').first, 
+              username.split(' ').first,
               style: const TextStyle(color: Colors.white, fontSize: 12),
               overflow: TextOverflow.ellipsis,
             ),

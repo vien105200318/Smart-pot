@@ -125,12 +125,13 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(24.0),
-      decoration: const BoxDecoration(
-        color: Color(0xFF161B22),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +141,7 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: colorScheme.onSurfaceVariant.withOpacity(0.4),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -150,7 +151,7 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
             children: [
               if (_selectedSSID != null)
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
                   onPressed: () => setState(() {
                     _selectedSSID = null;
                     _passController.clear();
@@ -158,10 +159,10 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
                 ),
               Text(
                 _selectedSSID == null ? 'Select Wi-Fi' : 'Enter Password',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                    color: colorScheme.onSurface),
               ),
               const Spacer(),
               if (_selectedSSID == null)
@@ -190,11 +191,13 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
     }
 
     if (_networks.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'Không tìm thấy mạng WiFi nào.\nHãy đảm bảo bạn đã kết nối vào "SmartPot-Setup"',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white54, fontSize: 16),
+          style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 16),
         ),
       );
     }
@@ -208,10 +211,18 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
         final isSecure = network['encryption'] == 'secure';
 
         return ListTile(
-          leading: const Icon(Icons.wifi, color: Colors.white70),
-          title: Text(ssid, style: const TextStyle(color: Colors.white)),
+          leading: Icon(Icons.wifi,
+              color: Theme.of(context).colorScheme.onSurfaceVariant),
+          title: Text(ssid,
+              style:
+                  TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           trailing: isSecure
-              ? const Icon(Icons.lock_outline, color: Colors.white38, size: 18)
+              ? Icon(Icons.lock_outline,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurfaceVariant
+                      .withOpacity(0.6),
+                  size: 18)
               : null,
           onTap: () {
             setState(() {
@@ -224,24 +235,26 @@ class _WifiSetupBottomSheetState extends ConsumerState<WifiSetupBottomSheet> {
   }
 
   Widget _buildPasswordForm() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Connecting to "$_selectedSSID"',
-          style: const TextStyle(color: Colors.white70, fontSize: 16),
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
         ),
         const SizedBox(height: 24),
         TextField(
           controller: _passController,
           obscureText: true,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: colorScheme.onSurface),
           decoration: InputDecoration(
             labelText: 'Password',
-            labelStyle: const TextStyle(color: Colors.white54),
-            prefixIcon: const Icon(Icons.lock, color: Colors.white54),
+            labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+            prefixIcon:
+                Icon(Icons.lock, color: colorScheme.onSurfaceVariant),
             enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+              borderSide: BorderSide(color: colorScheme.outlineVariant),
               borderRadius: BorderRadius.circular(16),
             ),
             focusedBorder: OutlineInputBorder(

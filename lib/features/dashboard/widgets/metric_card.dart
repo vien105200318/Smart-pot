@@ -18,10 +18,11 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1F2C),
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -39,11 +40,11 @@ class MetricCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(title, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(title, style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14)),
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white12,
+            backgroundColor: colorScheme.outlineVariant.withValues(alpha: 0.4),
             color: color,
             minHeight: 4,
             borderRadius: BorderRadius.circular(2),

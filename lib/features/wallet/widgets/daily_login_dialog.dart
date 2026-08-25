@@ -54,9 +54,10 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
       oldStreak: wallet.streakDays,
     );
     final reward = service.calculateReward(nextStreak);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dialog(
-      backgroundColor: const Color(0xFF161B22),
+      backgroundColor: colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -67,12 +68,15 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
               children: [
                 const Icon(Icons.calendar_month, color: Color(0xFF00C896), size: 28),
                 const SizedBox(width: 12),
-                const Text('Điểm danh hằng ngày',
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                Text('Điểm danh hằng ngày',
+                    style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close, color: Colors.white54),
+                  icon: Icon(Icons.close, color: colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -90,9 +94,10 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D1117),
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
+                border:
+                    Border.all(color: colorScheme.outlineVariant),
               ),
               child: Row(
                 children: [
@@ -111,9 +116,9 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(claimed ? 'Đã nhận hôm nay' : 'Nhận hôm nay',
-                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
                         Text('Streak ${wallet.streakDays} ngày | Sắp tới: $nextStreak ngày',
-                            style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
                       ],
                     ),
                   ),
@@ -175,7 +180,12 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
           children: [
             Text(
               ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i],
-              style: TextStyle(color: isToday ? const Color(0xFF00C896) : Colors.white54, fontSize: 11, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: isToday
+                      ? const Color(0xFF00C896)
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             AnimatedContainer(
@@ -189,9 +199,15 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
                     : isNext
                         ? const LinearGradient(colors: [Colors.orangeAccent, Colors.deepOrange])
                         : null,
-                color: !isCompleted && !isNext ? const Color(0xFF0D1117) : null,
+                color: !isCompleted && !isNext
+                    ? Theme.of(context).scaffoldBackgroundColor
+                    : null,
                 border: Border.all(
-                  color: isNext ? Colors.orangeAccent : (isToday ? const Color(0xFF00C896) : Colors.white12),
+                  color: isNext
+                      ? Colors.orangeAccent
+                      : (isToday
+                          ? const Color(0xFF00C896)
+                          : Theme.of(context).colorScheme.outlineVariant),
                   width: isNext || isToday ? 2 : 1,
                 ),
               ),
@@ -200,7 +216,13 @@ class _DailyLoginDialogState extends ConsumerState<DailyLoginDialog> with Single
                     ? const Icon(Icons.check, color: Colors.black87, size: 20)
                     : Text('${i + 1}',
                         style: TextStyle(
-                          color: isNext ? Colors.black87 : (isToday ? const Color(0xFF00C896) : Colors.white38),
+                          color: isNext
+                              ? Colors.black87
+                              : (isToday
+                                  ? const Color(0xFF00C896)
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         )),

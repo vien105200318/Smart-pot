@@ -33,11 +33,12 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0D1117),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -46,7 +47,7 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.4),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -63,8 +64,9 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white10,
-                          border: Border.all(color: Colors.white24, width: 1.5),
+                          color: colorScheme.surfaceContainerHighest,
+                          border: Border.all(
+                              color: colorScheme.outlineVariant, width: 1.5),
                         ),
                         child: SvgPicture.asset(
                           'assets/images/Green-coin.svg',
@@ -73,8 +75,11 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text('Ví greenCoins',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text('Ví greenCoins',
+                          style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface)),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -106,13 +111,14 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
   }
 
   Widget _shareTile() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF161B22),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -122,14 +128,15 @@ class _WalletBottomSheetState extends ConsumerState<WalletBottomSheet> {
             child: const Icon(Icons.share, color: Colors.blueAccent, size: 24),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Chia sẻ Smart Pot',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-                SizedBox(height: 2),
-                Text('Mời bạn bè cùng chăm cây', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                    style: TextStyle(color: colorScheme.onSurface, fontSize: 16, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text('Mời bạn bè cùng chăm cây',
+                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)),
               ],
             ),
           ),
