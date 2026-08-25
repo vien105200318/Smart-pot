@@ -16,6 +16,8 @@ import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/core/widgets/fade_slide_in.dart';
 import 'package:smart_pot/features/dashboard/repositories/pots_repository.dart';
 import 'package:smart_pot/features/wallet/widgets/daily_login_dialog.dart';
+import 'package:smart_pot/services/biometric_service.dart';
+import 'package:smart_pot/providers/prefs_provider.dart';
 
 
 class LanguageNotifier extends Notifier<String> {
@@ -43,6 +45,8 @@ class SettingsTab extends ConsumerStatefulWidget {
   ConsumerState<SettingsTab> createState() => _SettingsTabState();
 }
 class _SettingsTabState extends ConsumerState<SettingsTab> {
+  final _biometricService = BiometricService();
+  bool _biometricEnabled = false;
   Future<void> _updateAvatar() async {
     final File? image = await ImageHelper.pickImageFromGallery();
     
@@ -88,6 +92,61 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
    void initState() {
      super.initState();
      user = FirebaseAuth.instance.currentUser;
+     _loadBiometricPreference();
+  }
+
+  Future<void> _loadBiometricPreference() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final enabled = await BiometricService.isEnabled(prefs);
+    if (mounted) setState(() => _biometricEnabled = enabled);
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    if (value) {
+      final available = await _biometricService.isAvailable();
+      if (!available) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Thiết bị không hỗ trợ sinh trắc học!'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+        return;
+      }
+
+      final authenticated = await _biometricService.authenticate(
+        reason: 'Xác nhận bật đăng nhập sinh trắc học',
+      );
+      if (!authenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Xác thực thất bại. Chưa bật sinh trắc học.'),
+              backgroundColor: Colors.orangeAccent,
+            ),
+          );
+        }
+        return;
+      }
+
+      final prefs = ref.read(sharedPreferencesProvider);
+      await BiometricService.setEnabled(prefs, true);
+      if (mounted) {
+        setState(() => _biometricEnabled = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã bật đăng nhập sinh trắc học!'),
+            backgroundColor: Color(0xFF00C896),
+          ),
+        );
+      }
+    } else {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await BiometricService.setEnabled(prefs, false);
+      if (mounted) setState(() => _biometricEnabled = false);
+    }
   }
 
   Widget build(BuildContext context) {
@@ -299,6 +358,14 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
               onChanged: (val) {
                 ref.read(notificationProvider.notifier).setNoti(val);
               },
+            ),
+            _buildSwitchTile(
+              icon: Icons.fingerprint,
+              title: 'Đăng nhập sinh trắc học',
+              subtitle: _biometricEnabled ? 'Đã bật' : 'Chưa bật',
+              color: const Color(0xFF00C896),
+              value: _biometricEnabled,
+              onChanged: _toggleBiometric,
             ),
             _buildSwitchTile(
               icon: Icons.dark_mode_outlined,

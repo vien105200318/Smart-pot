@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'repositories/auth_repository.dart';
-import 'repositories/auth_repository.dart';
+import 'package:smart_pot/services/biometric_service.dart';
 
 class LoginBottomSheet extends ConsumerStatefulWidget {
   const LoginBottomSheet({super.key});
@@ -38,6 +39,7 @@ class _LoginBottomSheetState extends ConsumerState<LoginBottomSheet> {
       if (mounted) {
         Navigator.pop(context);
         context.go('/home');
+        _promptBiometricSetup();
       }
     } else {
       if (mounted) {
@@ -47,6 +49,53 @@ class _LoginBottomSheetState extends ConsumerState<LoginBottomSheet> {
             backgroundColor: Colors.redAccent,
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _promptBiometricSetup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final alreadyEnabled = await BiometricService.isEnabled(prefs);
+    if (alreadyEnabled) return;
+
+    final biometricService = BiometricService();
+    final available = await biometricService.isAvailable();
+    if (!available || !mounted) return;
+
+    final shouldEnable = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Bật đăng nhập nhanh?'),
+        content: const Text(
+          'Sử dụng vân tay hoặc Face ID để đăng nhập nhanh hơn vào lần sau.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Không'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Bật'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldEnable == true && mounted) {
+      final authenticated = await biometricService.authenticate(
+        reason: 'Xác nhận bật đăng nhập sinh trắc học',
+      );
+      if (authenticated) {
+        await BiometricService.setEnabled(prefs, true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đã bật đăng nhập sinh trắc học!'),
+              backgroundColor: Color(0xFF00C896),
+            ),
+          );
+        }
       }
     }
   }

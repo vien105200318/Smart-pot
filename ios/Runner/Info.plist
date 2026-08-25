@@ -76,5 +76,7 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSFaceIDUsageDescription</key>
+			<string>Smart Pot cần xác thực Face ID để đăng nhập nhanh hơn.</string>
 	</dict>
 </plist>
