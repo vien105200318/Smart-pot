@@ -10,6 +10,7 @@ import 'package:smart_pot/features/community/story_viewer_screen.dart';
 import 'package:smart_pot/features/community/create_story_screen.dart';
 import 'package:smart_pot/features/community/post_comments_bottom_sheet.dart';
 import 'package:smart_pot/core/widgets/shimmer_box.dart';
+import 'package:smart_pot/core/utils/responsive.dart' as resp; 
 
 class CommunityTab extends StatelessWidget {
   const CommunityTab({super.key});
@@ -140,14 +141,35 @@ class CommunityTab extends StatelessWidget {
                       );
                     }
 
-                    return ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10).copyWith(bottom: 100), 
-                      itemCount: docs.length,
-                      itemBuilder: (context, index) {
-                        final data = docs[index].data() as Map<String, dynamic>;
-                        final docId = docs[index].id; 
-                        return _buildGlassPostCard(context, docId, data, currentUid);
+                    // Posts — grid phản hồi theo width (1/2/3 cột)
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        final resp1 = resp.Responsive(constraints.maxWidth);
+
+                        return GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          padding:
+                              const EdgeInsets.all(20).copyWith(bottom: 100),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            // Số cột thay đổi: phone 1, tablet 2, rộng 3
+                            crossAxisCount: resp1.gridColumns,
+                            mainAxisSpacing: 20,
+                            crossAxisSpacing: 20,
+                            // Card cao hơn khi nhiều cột (không gian hẹp hơn)
+                            childAspectRatio: resp1.isVeryWide
+                                ? 0.62
+                                : (resp1.isWide ? 0.72 : 0.9),
+                          ),
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final data = docs[index].data()
+                                as Map<String, dynamic>;
+                            final docId = docs[index].id;
+                            return _buildGlassPostCard(
+                                context, docId, data, currentUid);
+                          },
+                        );
                       },
                     );
                   },
@@ -316,19 +338,18 @@ class CommunityTab extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
-      child: ClipRRect(
+          child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -391,24 +412,26 @@ class CommunityTab extends StatelessWidget {
                     ]
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 if (image != null && image.isNotEmpty)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.network(
                       image,
                       width: double.infinity,
-                      height: 280,
+                      height: 180,
                       fit: BoxFit.cover,
                     ),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 if (content.isNotEmpty)
                   Text(
                     content,
-                    style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4, fontWeight: FontWeight.w500),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.35, fontWeight: FontWeight.w500),
                   ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     _buildActionBtn(

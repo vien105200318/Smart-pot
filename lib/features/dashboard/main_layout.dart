@@ -5,6 +5,7 @@ import 'community_tab.dart';
 import 'history_tab.dart';
 import 'settings_tab.dart';
 import '../wallet/screens/pot_garden_screen.dart';
+import '../../core/utils/responsive.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -120,90 +121,198 @@ class _MainLayoutState extends State<MainLayout> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
 
-          floatingActionButton: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300), 
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return ScaleTransition(
-                scale: animation,
-                child: FadeTransition(opacity: animation, child: child),
-              );
-            },
-            child: _currentIndex == 2
-                ? _buildBareLeaf()      
-                : _buildFullActionButton(), 
-          ),
-          
-          floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    // Bọc LayoutBuilder để biết width thực tế của màn hình
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Tạo object Responsive từ width hiện có
+        final responsive = Responsive(constraints.maxWidth);
 
-          bottomNavigationBar: BottomAppBar(
-            color: colorScheme.surface,
-            shape: const CircularNotchedRectangle(),
-            notchMargin: 8.0, 
-            child: SizedBox(
-              height: 60,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // isTablet == true  → dùng NavigationRail (sidebar trái)
+        // isTablet == false → giữ nguyên BottomAppBar + FAB (phone)
+        final useRail = responsive.isTablet;
+
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              body: Row(
                 children: [
-                  Row(
-                    children: [
-                      _buildNavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home', index: 0),
-                      _buildNavItem(icon: Icons.yard_outlined, activeIcon: Icons.yard, label: 'Vườn', index: 1),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      _buildNavItem(icon: Icons.bar_chart_outlined, activeIcon: Icons.bar_chart, label: 'History', index: 3),
-                      _buildNavItem(icon: Icons.settings_outlined, activeIcon: Icons.settings, label: 'Settings', index: 4),
-                    ],
+                  // Cột trái: NavigationRail chỉ hiển thị trên tablet
+                  if (useRail) _buildNavigationRail(colorScheme),
+                  // Phần nội dung tab hiện tại
+                  Expanded(
+                    child: IndexedStack(
+                      index: _currentIndex,
+                      children: _screens,
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
-        ),
 
-        if (_isTransitioning)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 25.0), 
-              child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: _transitionController,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _fadeAnimation.value,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: Container(
-                          width: 65,
-                          height: 65,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF00C896), Color(0xFF007558)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+              // FAB chỉ hiện trên phone. Tablet dùng rail nên bỏ FAB
+              floatingActionButton: useRail
+                  ? null
+                  : AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return ScaleTransition(
+                          scale: animation,
+                          child:
+                              FadeTransition(opacity: animation, child: child),
+                        );
+                      },
+                      child: _currentIndex == 2
+                          ? _buildBareLeaf()
+                          : _buildFullActionButton(),
+                    ),
+
+              floatingActionButtonLocation:
+                  FloatingActionButtonLocation.centerDocked,
+
+              // Bottom nav chỉ hiện trên phone. Tablet dùng rail
+              bottomNavigationBar: useRail
+                  ? null
+                  : BottomAppBar(
+                      color: colorScheme.surface,
+                      shape: const CircularNotchedRectangle(),
+                      notchMargin: 8.0,
+                      child: SizedBox(
+                        height: 60,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                _buildNavItem(
+                                    icon: Icons.home_outlined,
+                                    activeIcon: Icons.home,
+                                    label: 'Home',
+                                    index: 0),
+                                _buildNavItem(
+                                    icon: Icons.yard_outlined,
+                                    activeIcon: Icons.yard,
+                                    label: 'Vườn',
+                                    index: 1),
+                              ],
                             ),
-                          ),
+                            Row(
+                              children: [
+                                _buildNavItem(
+                                    icon: Icons.bar_chart_outlined,
+                                    activeIcon: Icons.bar_chart,
+                                    label: 'History',
+                                    index: 3),
+                                _buildNavItem(
+                                    icon: Icons.settings_outlined,
+                                    activeIcon: Icons.settings,
+                                    label: 'Settings',
+                                    index: 4),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  },
+                    ),
+            ),
+
+            // Overlay animation khi chuyển tab (giữ nguyên cũ)
+            if (_isTransitioning)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 25.0),
+                  child: IgnorePointer(
+                    child: AnimatedBuilder(
+                      animation: _transitionController,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _fadeAnimation.value,
+                          child: ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: Container(
+                              width: 65,
+                              height: 65,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFF00C896),
+                                    Color(0xFF007558)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
+    );
+  }
+
+  /// Xây dựng NavigationRail — sidebar đứng bên trái cho tablet.
+  /// Có 5 destination, khớp với thứ tự tab trong _screens.
+  ///
+  /// Lưu ý: index 2 (GreenVibe) dùng CHUNG handler _onTabTapped
+  /// để giữ nguyên hành vi animation special khi chuyển tab.
+  Widget _buildNavigationRail(ColorScheme colorScheme) {
+    const destinations = <NavigationRailDestination>[
+      NavigationRailDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
+        label: Text('Home'),
+      ),
+      NavigationRailDestination(
+        icon: Icon(Icons.yard_outlined),
+        selectedIcon: Icon(Icons.yard),
+        label: Text('Vườn'),
+      ),
+      NavigationRailDestination(
+        icon: Icon(Icons.eco_outlined),
+        selectedIcon: Icon(Icons.eco),
+        label: Text('GreenVibe'),
+      ),
+      NavigationRailDestination(
+        icon: Icon(Icons.bar_chart_outlined),
+        selectedIcon: Icon(Icons.bar_chart),
+        label: Text('History'),
+      ),
+      NavigationRailDestination(
+        icon: Icon(Icons.settings_outlined),
+        selectedIcon: Icon(Icons.settings),
+        label: Text('Settings'),
+      ),
+    ];
+
+    return NavigationRail(
+      // Chỉ số tab đang chọn — đồng bộ với _currentIndex
+      selectedIndex: _currentIndex,
+      // Bấm destination → gọi handler chung (đã xử lý animation chuyển tab)
+      onDestinationSelected: _onTabTapped,
+      // Màu nền rail = surface theme (consistent light/dark)
+      backgroundColor: colorScheme.surface,
+      // Icon selected → brand green; không selected → onSurfaceVariant
+      selectedIconTheme: const IconThemeData(color: Color(0xFF00C896)),
+      unselectedIconTheme: IconThemeData(color: colorScheme.onSurfaceVariant),
+      // Label: selected → green & đậm; còn lại → onSurfaceVariant
+      selectedLabelTextStyle: const TextStyle(
+        color: Color(0xFF00C896),
+        fontWeight: FontWeight.bold,
+      ),
+      unselectedLabelTextStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+      // Hiện label dưới icon + có indicator
+      labelType: NavigationRailLabelType.all,
+      useIndicator: true,
+      destinations: destinations,
     );
   }
 

@@ -25,19 +25,26 @@ class WalletScreen extends ConsumerWidget {
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const WalletCard(),
-            const SizedBox(height: 20),
-            const DailyLoginCard(),
-            const SizedBox(height: 20),
-            const QuestsList(),
-            const SizedBox(height: 20),
-            _EarnMoreSection(),
-            const SizedBox(height: 24),
-            const _TransactionList(),
-          ],
+        // Center + ConstrainedBox: giới hạn width 600 trên tablet lớn,
+        // giữ form gọn giống phone
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const WalletCard(),
+                const SizedBox(height: 20),
+                const DailyLoginCard(),
+                const SizedBox(height: 20),
+                const QuestsList(),
+                const SizedBox(height: 20),
+                _EarnMoreSection(),
+                const SizedBox(height: 24),
+                const _TransactionList(),
+              ],
+            ),
+          ),
         ),
       ),
     );

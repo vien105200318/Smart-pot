@@ -2,13 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/widgets.dart';
 
 class ImageHelper {
   // Hàm 1: Chọn ảnh từ máy
   static Future<File?> pickImageFromGallery() async {
     final picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+
     if (image == null) return null;
     return File(image.path);
   }
@@ -16,8 +20,8 @@ class ImageHelper {
   // Hàm 2: Úp ảnh lên Cloudinary
   static Future<String?> uploadToCloudinary(File imageFile) async {
     // Thông tin tài khoản của ông
-    const cloudName = 'dotbbbwyw'; 
-    const uploadPreset = 'yn5gea2y'; 
+    const cloudName = 'dotbbbwyw';
+    const uploadPreset = 'yn5gea2y';
 
     final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/upload');
 
@@ -32,9 +36,9 @@ class ImageHelper {
         final responseData = await response.stream.toBytes();
         final responseString = String.fromCharCodes(responseData);
         final jsonMap = jsonDecode(responseString);
-        
+
         // Trả về cái link ảnh xịn xò (bắt đầu bằng https://...)
-        return jsonMap['secure_url']; 
+        return jsonMap['secure_url'];
       } else {
         print('Lỗi Upload Cloudinary: ${response.statusCode}');
         return null;
@@ -43,5 +47,22 @@ class ImageHelper {
       print('Lỗi mạng Cloudinary: $e');
       return null;
     }
+  }
+}
+
+class Responsive {
+  final double width;
+  const Responsive(this.width);
+
+  bool get isTablet => width >= 800;
+
+  bool get isWide => width >= 700;
+
+  bool get isVeryWide => width >= 1100;
+
+  int get gridColunms {
+    if (width >= 1100) return 3;
+    if (width >= 700) return 2;
+    return 1;
   }
 }

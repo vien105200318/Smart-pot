@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smart_pot/core/widgets/shimmer_box.dart';
 import 'package:smart_pot/core/widgets/error_state_widget.dart';
 import 'package:smart_pot/core/widgets/fade_slide_in.dart';
+import 'package:smart_pot/core/utils/responsive.dart';
 import 'package:smart_pot/features/dashboard/widgets/metric_card.dart';
 import 'package:smart_pot/features/dashboard/repositories/sensor_repository.dart';
 import 'package:smart_pot/l10n/app_localizations.dart';
@@ -98,19 +99,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                   return Column(
                     children: [
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        childAspectRatio: 1.3,
-                        children: [
-                          MetricCard(title: lang.soilMoisture, value: '${moisture.toStringAsFixed(0)}%', icon: Icons.water_drop_outlined, color: const Color(0xFF00C896), progress: moisture / 100.0),
-                          MetricCard(title: lang.temperature, value: '${temperature.toStringAsFixed(1)}°C', icon: Icons.thermostat_outlined, color: Colors.orangeAccent, progress: temperature / 50.0),
-                          MetricCard(title: lang.airHumidity, value: '${humidity.toStringAsFixed(0)}%', icon: Icons.air_outlined, color: Colors.blueAccent, progress: humidity / 100.0),
-                          MetricCard(title: lang.waterTank, value: '${waterLevel.toStringAsFixed(0)}%', icon: Icons.opacity, color: Colors.tealAccent, progress: waterLevel / 100.0),
-                        ],
+                      // Sensor cards — grid phản hồi theo width màn hình
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final resp = Responsive(constraints.maxWidth);
+                          // Phone luôn 2 cột, tablet rộng 4 cột
+                          final columns = resp.isVeryWide ? 4 : 2;
+                          return GridView.count(
+                            crossAxisCount: columns,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            childAspectRatio: resp.isVeryWide ? 1.7 : 1.3,
+                            children: [
+                              MetricCard(title: lang.soilMoisture, value: '${moisture.toStringAsFixed(0)}%', icon: Icons.water_drop_outlined, color: const Color(0xFF00C896), progress: moisture / 100.0),
+                              MetricCard(title: lang.temperature, value: '${temperature.toStringAsFixed(1)}°C', icon: Icons.thermostat_outlined, color: Colors.orangeAccent, progress: temperature / 50.0),
+                              MetricCard(title: lang.airHumidity, value: '${humidity.toStringAsFixed(0)}%', icon: Icons.air_outlined, color: Colors.blueAccent, progress: humidity / 100.0),
+                              MetricCard(title: lang.waterTank, value: '${waterLevel.toStringAsFixed(0)}%', icon: Icons.opacity, color: Colors.tealAccent, progress: waterLevel / 100.0),
+                            ],
+                          );
+                        },
                       ),
                       const SizedBox(height: 24),
 
@@ -237,21 +246,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildHomeSkeleton() {
     return Column(
       children: [
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.3,
-          children: List.generate(
-            4,
-            (_) => ShimmerBox(
-              width: double.infinity,
-              height: double.infinity,
-              radius: BorderRadius.circular(20),
-            ),
-          ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final resp = Responsive(constraints.maxWidth);
+            final columns = resp.isVeryWide ? 4 : 2;
+            return GridView.count(
+              crossAxisCount: columns,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: resp.isVeryWide ? 1.7 : 1.3,
+              children: List.generate(
+                4,
+                (_) => ShimmerBox(
+                  width: double.infinity,
+                  height: double.infinity,
+                  radius: BorderRadius.circular(20),
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 24),
         Row(
